@@ -1,0 +1,20 @@
+{
+  "name": "hms-small-mid",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-Ready Hotel Management System for Small & Mid Size Hotels",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "lint": "npm run lint --workspace=frontend && npm run lint --workspace=backend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "start": "npm run start --workspace=backend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "test:uat": "node tests/uat.test.mjs",
+    "test": "node tests/uat.test.mjs"
+  }
+}
