@@ -1,119 +1,75 @@
 # The Grand Azure – Hotel Management System (HMS)
 
-> A production-ready, modular Hotel Management System designed for small-to-mid size boutique hotels and resorts. Covers the complete guest lifecycle from multi-channel reservations to digital check-in with KYC, folio billing with GST compliance, restaurant POS with Kitchen Display (KDS), housekeeping dispatch, inventory management, duty rosters, and guest loyalty.
+> A production-ready, domain-modular Hotel Management System (HMS) built around **PostgreSQL 16/17+ as the authoritative system of record**, event-driven asynchronous integration, and managed cloud deployments (AWS & GCP). Covers the complete hospitality lifecycle from omnichannel reservations to digital KYC, append-only folio billing with dual-slab GST, restaurant POS with Kitchen Display (KDS), stock ledgers, duty rosters, and guest loyalty.
 
 Built with design inspiration from the modern **Lodgify** hospitality interface, featuring clean aesthetics, pastel visual hierarchy, and signature electric-lime accents.
 
 ---
 
-## Architecture Diagram
-
-Refer to the visual system blueprint in [Architecture Diagram.png](file:///d:/Projects/Gautam_Github/HMS%20-%20Small%20&%20Mid/Architecture%20Diagram.png):
+## 🏛️ Architecture & System Blueprint
 
 ```text
-       [ Client Applications ]
-┌─────────────────┬──────────────────┬─────────────────┐
-│ Front Desk Web  │ Housekeeping App │ Restaurant POS  │
-└────────┬────────┴────────┬─────────┴────────┬────────┘
-         │                 │                  │
-         ▼                 ▼                  ▼
-┌──────────────────────────────────────────────────────┐
-│                    API Gateway                       │
-└──────────────────────────┬───────────────────────────┘
-                           │
- ┌─────────────────────────┼─────────────────────────┐
- │                         │                         │
- ▼                         ▼                         ▼
-[ Reservation Engine ]  [ Billing & Tax ]  [ POS & Inventory ]
- - Multi-room Matrix     - Dual-slab GST    - Touch Ordering
- - 2-Way OTA Sync        - Dynamic Surge    - Kitchen Display
- - Digital KYC Check-in  - Folios & Stripe  - Linen & Laundry
+                                [ Client Applications ]
+  ┌─────────────────────────┬─────────────────────────┬─────────────────────────┐
+  │ Front Desk Web (React)  │ Housekeeping & Staff App│ Restaurant POS (PWA)    │
+  └────────────┬────────────┴────────────┬────────────┴────────────┬────────────┘
+               │                         │                         │
+               ▼                         ▼                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │         API Gateway / Domain-Modular Monolith (NestJS / Node.js API)        │
+  │     [Identity] [Hotel] [Reservation] [Billing] [POS] [Inventory] [Staff]    │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                 ┌───────────────────────┴───────────────────────┐
+                 │                                               │
+                 ▼ (ACID / RLS Transactions)                     ▼ (Async Events)
+  ┌──────────────────────────────────────────────┐    ┌──────────────────────────┐
+  │         PostgreSQL 16/17+ System of Record    │    │   Transactional Outbox   │
+  │  13 Schemas: identity, hotel, guest, stay,   │───▶│   & Event Bus Engine     │
+  │  reservation, billing, pos, inventory, hk,   │    └─────────────┬────────────┘
+  │  workforce, audit, integration, reporting    │                  │
+  │                                              │                  ▼
+  │  - Append-Only Financial & Stock Ledgers     │       [ RabbitMQ / Redis PubSub ]
+  │  - Multi-Tenant Row-Level Security (RLS)     │                  │
+  │  - Daily Room Availability Matrix            │                  ▼
+  │  - Monthly Table Partitioning                │    [ OTA Sync / KDS / Billing ]
+  └──────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📦 Core Modules
+## 📦 Core Domain Modules & Technical Schemas
 
-### 1. Dashboard (UI Match)
-
-- **Top Metric Cards**: New Bookings (`840`, `+8.70%`), Check-In (`231`, `+3.56%`), Check-Out (`124`, `-1.06%`), Total Revenue (`$123,980`, `+5.70%`).
-- **Room Availability Progress Bar**: Visual segmented occupancy bar with 4 live counters: Occupied (`286`), Reserved (`87`), Available (`32`), and Not Ready (`13`).
-- **Revenue Curve**: Curved SVG line chart with area fill and interactive floating badge tag (`$315,060`).
-- **Overall Rating Breakdown**: `4.6/5` Impressive badge with category ratings (Facilities `4.4`, Cleanliness `4.7`, Services `4.6`, Comfort `4.8`, Location `4.5`).
-- **Reservations 7-Day Chart**: Grouped bar visualization comparing booked vs canceled across dates.
-- **Booking by Platform Donut**: Multi-colored donut chart (Direct Booking `61%`, Booking.com `12%`, Agoda `11%`, Airbnb `9%`, Hotels.com `5%`, Others `2%`).
-- **Quick Tasks Widget**: Real-time operational tasks with priority pills and one-click task addition.
-
-### 2. Guest Management & Front Desk
-
-- Searchable reservations with real-time status: `Confirmed`, `CheckedIn`, `CheckedOut`.
-- **Digital KYC & ID Verification**: Encrypted document type (`Passport`, `Driving License`, `National ID`) and number recording.
-- One-click Check-in and Check-out workflows with automated room status updates to `Dirty` for Housekeeping.
-
-### 3. Visual Reservation Calendar Matrix
-
-- 14-day interactive multi-room timeline grid across floors (`Floor 1`, `Floor 2`, `Floor 3`).
-- Color-coded booking blocks with guest names and source platform badges.
-
-### 4. Housekeeping & Room Service
-
-- **Room Status Board**: Live cards with status highlights (`Available`, `Occupied`, `Dirty`, `Cleaning`, `Inspected`, `OutOfOrder`).
-- One-click transitions: `Start Cleaning` → `Mark Inspected` → `Ready for Guest`.
-- Cleaning & maintenance dispatch tasks with priority badges (`High`, `Medium`, `Low`).
-
-### 5. Billing, GST Compliance & Dynamic Pricing
-
-- **Itemized Guest Folios**: Unified folio aggregating Room stay, Restaurant dining, Minibar, and Laundry expenses.
-- **Dual-Slab GST Engine**:
-  - Below ₹7,500/night: **12% GST** (6% CGST + 6% SGST)
-  - ₹7,500 and above: **18% GST** (9% CGST + 9% SGST)
-  - F&B Dining: **5% GST**
-  - HSN/SAC code tracking (`996311` Accommodation, `996331` Restaurant & Minibar).
-- **Dynamic Pricing Simulator**: Interactive sliders for Occupancy Surge Threshold (%), Surge Multiplier (`1.25x`), and Weekend Multipliers with live price previews.
-- **Payment Gateways**: Simulated checkout flows via Stripe, Razorpay, and PayPal.
-- **Printable Tax Invoice**: Clean PDF/print modal layout with GSTIN, customer details, and tax breakdowns.
-
-### 6. Restaurant POS & Kitchen Display System (KDS)
-
-- Touch-friendly menu categorized by Mains, Appetizers, Beverages, and Desserts.
-- **"Charge to Room Folio"**: Instantly appends food charges to active guest stays.
-- **Kitchen Display System (KDS)**: Live kitchen ticket state machine (`Received` → `Preparing` → `Ready` → `Delivered`).
-
-### 7. Inventory & Laundry Operations
-
-- Stock tracking across Kitchen, Amenities, Linen, Minibar, and Cleaning supplies with minimum threshold alerts.
-- Restock modal for swift inward inventory processing.
-- Linen and laundry turnaround batch tracker (`Washing` → `Ironing` → `Returned`).
-
-### 8. Staff Management & HR
-
-- Shift duty rosters across Front Office, Housekeeping, F&B, Engineering, and Administration.
-- Biometric fingerprint and mobile geofence punch clock simulator.
-- Leave request management and supervisor approval workflows.
-
-### 9. Guest Reviews & Loyalty Club
-
-- Net Promoter Score (NPS) tracking and sentiment tags (`Positive`, `Neutral`, `Negative`).
-- Tiered loyalty program (`Silver`, `Gold`, `Platinum`) with accrued points, nights, and customized hospitality perks.
-
-### 10. Channel Manager & Security Audit
-
-- 2-way OTA channel synchronization with Booking.com, Expedia, and Airbnb.
-- "Sync All OTAs Now" manual parity broadcast.
-- Immutable security audit logs with timestamps, actors, and IP addresses.
+| Domain Module | Schema | Purpose & Key Tables | Concurrency & Ledger Controls |
+| :--- | :--- | :--- | :--- |
+| **Identity & RBAC** | `identity` | `tenants`, `users` | Multi-tenant isolation with scoped roles (Admin, Reception, Housekeeping, Kitchen). |
+| **Hotel Catalog** | `hotel` | `properties`, `room_types`, `rooms`, `outlets` | Room operational state machine (`Available` → `Occupied` → `Dirty` → `Cleaning` → `Inspected`). |
+| **Guest CRM & KYC** | `guest` | `guests`, `feedback`, `loyalty_members` | Encrypted KYC document verification (`Passport`, `National ID`), NPS sentiment scoring. |
+| **Reservation Engine** | `reservation` | `reservations`, `room_inventory_daily`, `pricing_configs` | Daily matrix inventory allocation avoiding overselling; dynamic surge pricing engine. |
+| **Stay & Front Desk** | `stay` | `checkin_records`, `checkout_records` | Check-in KYC sync; automated room turnover dispatch to Housekeeping on checkout. |
+| **Folio & Billing** | `billing` | `folios`, `folio_entries`, `journal_entries`, `journal_lines` | **Append-only ledger** with reversals; dual-slab GST (`996311`/`996331`); payment settlement. |
+| **POS & Kitchen** | `pos` | `pos_orders`, `pos_order_items` | Touch ordering; live KDS ticket progression; automatic charge-to-room folio routing. |
+| **Inventory Ledger** | `inventory` | `items`, `stock_ledger`, `stock_balances` | **Append-only stock movements** (`PURCHASE`, `KITCHEN_ISSUE`, `WASTAGE`) + balance projections. |
+| **Housekeeping** | `housekeeping` | `tasks`, `maintenance_work_orders` | Turnover tasks, inspection checklists, technician work order resolution workflows. |
+| **Workforce & HR** | `workforce` | `staff`, `attendance_records`, `leave_requests` | Shift rosters, biometric punch-in/out attendance simulator, supervisor leave approvals. |
+| **Audit & Security** | `audit` | `audit_log` | Immutable append-only audit trail logging actors, roles, actions, timestamps, and IPs. |
+| **Integration & OTAs** | `integration` | `outbox_events`, `ota_channel_sync_logs` | **Transactional Outbox pattern**; 2-way rate parity broadcast (Booking.com, Expedia, Airbnb). |
 
 ---
 
 ## 🛠️ Technology Stack
 
 | Layer | Technologies |
-| --- | --- |
-| **Frontend** | React 19, TypeScript, Vite 8, Vanilla CSS Design System, Lucide React Icons |
-| **Backend** | Node.js v20+, TypeScript, Express, Modular Service Architecture |
-| **Tax & Pricing** | Custom GST Compliance Engine, Dynamic Occupancy Surge Algorithm |
-| **Containers** | Docker, Docker Compose, Multi-stage alpine builds |
-| **Cloud & K8s** | Azure Kubernetes Service (AKS), Ingress Nginx, Azure Container Registry |
-| **CI/CD** | GitHub Actions automated test, build, container push, and AKS deploy |
+| :--- | :--- |
+| **Frontend Web** | React 19, TypeScript, Vite 8, Lucide React, Modern Lodgify Design System |
+| **Backend API** | Node.js v20+, TypeScript, Express / NestJS Modular Monolith Architecture |
+| **System of Record** | PostgreSQL 16/17+ (Schemas, Append-Only Ledgers, RLS, Monthly Partitioning) |
+| **Event Engine** | Transactional Outbox Pattern, Asynchronous Event Bus, RabbitMQ / Redis |
+| **API Contracts** | OpenAPI 3.0 / Swagger Interactive UI (`/api/docs`) |
+| **Tax & Pricing** | Dual-Slab GST Engine (12% vs 18% accommodation, 5% F&B), Dynamic Surge Multiplier |
+| **Containers** | Docker Compose with PostgreSQL 16, Redis 7, RabbitMQ 3 Management |
+| **Cloud Deployments** | **AWS** (ECS Fargate + RDS Multi-AZ + ElastiCache + S3) & **GCP** (Cloud Run + Cloud SQL HA + Memorystore + GCS) via Terraform |
+| **CI/CD & Tests** | GitHub Actions pipeline, 19 End-to-End Enterprise UAT Hospitality Use Cases (`npm run test:uat`) |
 
 ---
 
@@ -122,63 +78,72 @@ Refer to the visual system blueprint in [Architecture Diagram.png](file:///d:/Pr
 ### 1. Prerequisites
 
 - Node.js v18+ and npm installed
+- Optional: Docker & Docker Compose (for local PostgreSQL, Redis, and RabbitMQ)
 
-### 2. Backend Setup
+### 2. Full-Stack Dev Environment
 
-```bash
-cd backend
-npm install
-npm run build
-npm start
-```
-
-*The backend API will run on `http://localhost:5000` (Health: `http://localhost:5000/api/health`).*
-
-### 3. Frontend Setup
+Start backend and frontend in a single unified command:
 
 ```bash
-cd frontend
-npm install
 npm run dev
 ```
 
-*Open your browser and navigate to `http://localhost:3000/`.*
+- 🌐 **Frontend Web App**: `http://localhost:3000/`
+- 🏨 **Backend REST API**: `http://localhost:5000/api`
+- 📖 **Interactive OpenAPI Docs**: `http://localhost:5000/api/docs`
+- ❤️ **Health Check**: `http://localhost:5000/api/health`
+
+### 3. Enterprise UAT Test Suite
+
+Run the industry-standard 19 use-case acceptance suite:
+
+```bash
+npm run test:uat
+```
+
+*The UAT runner automatically verifies that the backend is responding, auto-starts it if necessary, seeds baseline data, and tests all 19 hospitality scenarios with 100% pass verification.*
 
 ---
 
-## 🐳 Docker Deployment
+## 🐳 Docker Compose Deployment
 
-To launch both frontend and backend in isolated production containers:
+Launch the complete stack (PostgreSQL 16, Redis, RabbitMQ, Backend API, Frontend Nginx):
 
 ```bash
 cd deploy/docker
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
-- Web Application: `http://localhost`
+- Frontend Application: `http://localhost`
 - Backend API: `http://localhost:5000`
+- RabbitMQ Management Console: `http://localhost:15672` (User: `hms_guest` / Pass: `hms_guest_pass`)
+- PostgreSQL: `localhost:5432` (`grand_azure_hms`)
 
 ---
 
-## ☸️ Azure Kubernetes Service (AKS) Deployment
+## ☁️ Cloud Deployments (Infrastructure as Code)
 
-1. Build and push container images to Azure Container Registry (ACR):
+### AWS Deployment (ECS Fargate + RDS Multi-AZ + S3)
 
-   ```bash
-   docker build -t <acr-name>.azurecr.io/hms-backend:latest -f deploy/docker/Dockerfile.backend .
-   docker build -t <acr-name>.azurecr.io/hms-frontend:latest -f deploy/docker/Dockerfile.frontend .
+Located in [`deploy/terraform/aws/`](file:///d:/Projects/Gautam_Github/HMS%20-%20Small%20&%20Mid/deploy/terraform/aws/):
 
-   docker push <acr-name>.azurecr.io/hms-backend:latest
-   docker push <acr-name>.azurecr.io/hms-frontend:latest
-   ```
+```bash
+cd deploy/terraform/aws
+terraform init
+terraform plan
+terraform apply
+```
 
-1. Apply Kubernetes manifests to your AKS cluster:
+### GCP Deployment (Cloud Run + Cloud SQL HA + GCS)
 
-   ```bash
-   kubectl apply -f deploy/k8s/backend-deployment.yaml
-   kubectl apply -f deploy/k8s/frontend-deployment.yaml
-   kubectl apply -f deploy/k8s/ingress.yaml
-   ```
+Located in [`deploy/terraform/gcp/`](file:///d:/Projects/Gautam_Github/HMS%20-%20Small%20&%20Mid/deploy/terraform/gcp/):
+
+```bash
+cd deploy/terraform/gcp
+terraform init
+terraform plan
+terraform apply
+```
 
 ---
 

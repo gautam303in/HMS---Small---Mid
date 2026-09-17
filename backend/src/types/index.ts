@@ -255,3 +255,7 @@ export interface AuditTrail {
   details: string;
   ipAddress: string;
 }
+
+export type LoyaltyMember = LoyaltyProfile;
+export type AuditLog = AuditTrail;
+

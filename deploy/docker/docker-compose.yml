@@ -1,6 +1,64 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: grand_azure_hms
+      POSTGRES_USER: hms_admin
+      POSTGRES_PASSWORD: hms_secure_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - hms-pgdata:/var/lib/postgresql/data
+      - ../../database/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ../../database/seeds/01_master_data.sql:/docker-entrypoint-initdb.d/02_seeds.sql:ro
+    networks:
+      - hms-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hms_admin -d grand_azure_hms"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: hms-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - hms-redisdata:/data
+    networks:
+      - hms-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: hms-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: hms_guest
+      RABBITMQ_DEFAULT_PASS: hms_guest_pass
+    volumes:
+      - hms-rabbitmqdata:/var/lib/rabbitmq
+    networks:
+      - hms-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ../../backend
@@ -12,6 +70,14 @@ services:
       - PORT=5000
       - NODE_ENV=production
       - CORS_ORIGIN=*
+      - DATABASE_URL=postgresql://hms_admin:hms_secure_password_2026@postgres:5432/grand_azure_hms
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://hms_guest:hms_guest_pass@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - hms-network
@@ -32,3 +98,8 @@ services:
 networks:
   hms-network:
     driver: bridge
+
+volumes:
+  hms-pgdata:
+  hms-redisdata:
+  hms-rabbitmqdata:
