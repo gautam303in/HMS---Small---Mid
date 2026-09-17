@@ -23,7 +23,39 @@
  *  UC-15: 2-Way OTA Channel Distribution Sync & Audit Trail Compliance
  */
 
+import { spawn, execSync } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..');
+const backendDir = path.join(rootDir, 'backend');
+
 const API_BASE = process.env.API_BASE || 'http://localhost:5000/api';
+
+function killProcessTree(pid) {
+  if (!pid) return;
+  try {
+    if (process.platform === 'win32') {
+      execSync(`taskkill /pid ${pid} /T /F`, { stdio: 'ignore' });
+    } else {
+      process.kill(-pid, 'SIGKILL');
+    }
+  } catch {
+    // Process already exited
+  }
+}
+
+async function isServerUp(url) {
+  try {
+    const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(1000) });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 async function assert(condition, message) {
   if (!condition) {
@@ -41,23 +73,87 @@ async function runEnterpriseUat() {
   let passed = 0;
   let total = 0;
   const startTime = Date.now();
+  let spawnedServer = null;
 
-  async function testCase(ucId, title, scenario, execution) {
-    total++;
-    console.log(`--------------------------------------------------------------------`);
-    console.log(`📌 [${ucId}] ${title}`);
-    console.log(`   Scenario: ${scenario}`);
-    process.stdout.write(`   Executing... `);
-    try {
-      await execution();
-      console.log('✅ PASSED (Verified)');
-      passed++;
-    } catch (err) {
-      console.log('❌ FAILED');
-      console.error(`   Failure Details: ${err.message}`);
-      process.exitCode = 1;
+  try {
+    const serverAlreadyRunning = await isServerUp(API_BASE);
+    if (!serverAlreadyRunning) {
+      console.log('ℹ️  HMS backend server is not running. Auto-starting backend server for UAT...');
+
+      const tsxCli = path.join(backendDir, 'node_modules', 'tsx', 'dist', 'cli.mjs');
+      const distServer = path.join(backendDir, 'dist', 'server.js');
+
+      if (fs.existsSync(tsxCli)) {
+        spawnedServer = spawn(process.execPath, [tsxCli, 'src/server.ts'], {
+          cwd: backendDir,
+          stdio: 'pipe'
+        });
+      } else if (fs.existsSync(distServer)) {
+        spawnedServer = spawn(process.execPath, ['dist/server.js'], {
+          cwd: backendDir,
+          stdio: 'pipe'
+        });
+      } else {
+        execSync('npm run build --workspace=backend', { cwd: rootDir, stdio: 'inherit' });
+        spawnedServer = spawn(process.execPath, ['dist/server.js'], {
+          cwd: backendDir,
+          stdio: 'pipe'
+        });
+      }
+
+      const cleanupOnSignal = () => {
+        if (spawnedServer?.pid) {
+          killProcessTree(spawnedServer.pid);
+        }
+      };
+      process.on('SIGINT', cleanupOnSignal);
+      process.on('SIGTERM', cleanupOnSignal);
+      process.on('exit', cleanupOnSignal);
+
+      const maxWait = 15000;
+      const startWait = Date.now();
+      let ready = false;
+      while (Date.now() - startWait < maxWait) {
+        if (await isServerUp(API_BASE)) {
+          ready = true;
+          break;
+        }
+        await new Promise(r => setTimeout(r, 250));
+      }
+
+      if (!ready) {
+        throw new Error('Timed out waiting for HMS Backend API server to start.');
+      }
+      console.log('✅ HMS backend server is ready.\n');
     }
-  }
+
+    // Reset database to seed baseline before running tests to ensure idempotency
+    try {
+      await fetch(`${API_BASE}/seed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+    } catch {
+      // Best-effort reset
+    }
+
+    async function testCase(ucId, title, scenario, execution) {
+      total++;
+      console.log(`--------------------------------------------------------------------`);
+      console.log(`📌 [${ucId}] ${title}`);
+      console.log(`   Scenario: ${scenario}`);
+      process.stdout.write(`   Executing... `);
+      try {
+        await execution();
+        console.log('✅ PASSED (Verified)');
+        passed++;
+      } catch (err) {
+        console.log('❌ FAILED');
+        console.error(`   Failure Details: ${err.message}`);
+        process.exitCode = 1;
+      }
+    }
 
   // -------------------------------------------------------------------------
   // UC-01: Health & Connectivity
@@ -660,16 +756,22 @@ async function runEnterpriseUat() {
   );
 
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
+  const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
 
   console.log('\n====================================================================');
-  console.log(`📊 ENTERPRISE UAT SUMMARY: ${passed}/${total} USE CASES PASSED (100%)`);
+  console.log(`📊 ENTERPRISE UAT SUMMARY: ${passed}/${total} USE CASES PASSED (${passRate}%)`);
   console.log(`⏱ Total Duration: ${durationSec}s`);
   console.log(`🛡 All Industry Standard Hospitality Criteria Satisfied.`);
   console.log('====================================================================\n');
 
   if (passed !== total) {
-    process.exit(1);
+    process.exitCode = 1;
   }
+} finally {
+  if (spawnedServer?.pid) {
+    killProcessTree(spawnedServer.pid);
+  }
+}
 }
 
 runEnterpriseUat().catch(err => {
