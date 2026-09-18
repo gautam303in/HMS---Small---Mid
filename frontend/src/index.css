@@ -37,6 +37,7 @@
   --shadow-float: 0 12px 32px -4px rgba(15, 23, 42, 0.08);
 }
 
+body.dark,
 [data-theme="dark"] {
   --bg-app: #0B1120;
   --bg-card: #1E293B;
@@ -278,53 +279,63 @@ textarea.input-clean {
 /* ==========================================================================
    Dark Mode Component Overrides
    ========================================================================== */
+body.dark header,
 [data-theme="dark"] header {
   background-color: var(--bg-card) !important;
   border-bottom-color: var(--border-subtle) !important;
 }
 
+body.dark .lodgify-card,
 [data-theme="dark"] .lodgify-card {
   background-color: var(--bg-card) !important;
   border-color: var(--border-card) !important;
   color: var(--text-main) !important;
 }
 
+body.dark .input-clean,
 [data-theme="dark"] .input-clean {
   background-color: var(--bg-subtle) !important;
   border-color: var(--border-subtle) !important;
   color: var(--text-main) !important;
 }
 
+body.dark .input-clean:focus,
 [data-theme="dark"] .input-clean:focus {
   border-color: var(--color-primary) !important;
 }
 
+body.dark .btn-secondary,
 [data-theme="dark"] .btn-secondary {
   background-color: var(--bg-subtle) !important;
   color: var(--text-main) !important;
   border-color: var(--border-subtle) !important;
 }
 
+body.dark .btn-secondary:hover,
 [data-theme="dark"] .btn-secondary:hover {
   background-color: #334155 !important;
 }
 
+body.dark .modal-container,
 [data-theme="dark"] .modal-container {
   background-color: var(--bg-card) !important;
   border-color: var(--border-subtle) !important;
   color: var(--text-main) !important;
 }
 
+body.dark .data-table th,
 [data-theme="dark"] .data-table th {
   color: var(--text-muted) !important;
   border-bottom-color: var(--border-subtle) !important;
 }
 
+body.dark .data-table td,
 [data-theme="dark"] .data-table td {
   color: var(--text-main) !important;
   border-bottom-color: var(--border-subtle) !important;
 }
 
+body.dark .data-table tr:hover td,
 [data-theme="dark"] .data-table tr:hover td {
   background-color: rgba(255, 255, 255, 0.04) !important;
 }

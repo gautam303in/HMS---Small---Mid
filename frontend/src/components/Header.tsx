@@ -28,11 +28,22 @@ export const Header: React.FC<HeaderProps> = ({
   const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('hms_theme') as 'light' | 'dark') || 'light';
+    const saved = localStorage.getItem('theme') || localStorage.getItem('hms_theme');
+    if (saved === 'dark' || saved === 'light') {
+      return saved;
+    }
+    return document.body.classList.contains('dark') ? 'dark' : 'light';
   });
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      document.body.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.body.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+    localStorage.setItem('theme', theme);
     localStorage.setItem('hms_theme', theme);
     window.dispatchEvent(new CustomEvent('hms_theme_changed', { detail: theme }));
   }, [theme]);

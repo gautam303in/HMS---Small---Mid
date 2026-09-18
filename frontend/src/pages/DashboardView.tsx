@@ -11,11 +11,13 @@ import {
   ChevronDown 
 } from 'lucide-react';
 
+import { TodaysArrivals } from '../components/TodaysArrivals';
+
 interface DashboardViewProps {
   onNavigateTab: (tab: any) => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _onNavigateTab }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab }) => {
   const [revenueRange] = useState('Last 6 Months');
   const [reservationsRange] = useState('Last 7 Days');
   const [tasks, setTasks] = useState([
@@ -226,7 +228,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _on
         </div>
       </div>
 
-      {/* 2. MAIN GRID: 2 COLUMNS (LEFT 2/3, RIGHT 1/3) */}
+      {/* 2. TODAY'S ARRIVALS */}
+      <TodaysArrivals onNavigateTab={onNavigateTab} />
+
+      {/* 3. MAIN GRID: 2 COLUMNS (LEFT 2/3, RIGHT 1/3) */}
       <div className="dashboard-main-grid" style={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
