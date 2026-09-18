@@ -4,6 +4,7 @@ import { AlertTriangle, Plus, Shirt, CheckCircle2 } from 'lucide-react';
 export const InventoryView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'stock' | 'laundry'>('stock');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [filterOnlyLowStock, setFilterOnlyLowStock] = useState(false);
   const [restockModal, setRestockModal] = useState<any | null>(null);
   const [restockQty, setRestockQty] = useState(10);
 
@@ -47,9 +48,14 @@ export const InventoryView: React.FC = () => {
     }));
   };
 
-  const filteredStock = selectedCategory === 'All'
-    ? inventory
-    : inventory.filter(i => i.category === selectedCategory);
+  const lowStockItems = inventory.filter(i => i.currentStock <= i.minThreshold);
+  const lowStockCount = lowStockItems.length;
+
+  const filteredStock = inventory.filter(item => {
+    const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
+    const matchesLowStock = filterOnlyLowStock ? item.currentStock <= item.minThreshold : true;
+    return matchesCat && matchesLowStock;
+  });
 
   return (
     <div className="animate-fade-in responsive-view-container">
@@ -101,8 +107,63 @@ export const InventoryView: React.FC = () => {
       </div>
 
       {activeTab === 'stock' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
+          {/* Low Stock Warning Alert Banner */}
+          {lowStockCount > 0 && (
+            <div style={{
+              padding: '14px 18px',
+              borderRadius: '12px',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FCA5A5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#FEE2E2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#DC2626'
+                }}>
+                  <AlertTriangle size={18} />
+                </div>
+                <div>
+                  <strong style={{ fontSize: '13px', color: '#991B1B', display: 'block' }}>
+                    {lowStockCount} Inventory {lowStockCount === 1 ? 'Item is' : 'Items are'} Below Safety Threshold
+                  </strong>
+                  <span style={{ fontSize: '12px', color: '#B91C1C' }}>
+                    Stock levels have depleted past their minimum alert limits. Immediate replenishment purchase orders recommended.
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setFilterOnlyLowStock(!filterOnlyLowStock)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #DC2626',
+                  backgroundColor: filterOnlyLowStock ? '#DC2626' : '#FFFFFF',
+                  color: filterOnlyLowStock ? '#FFFFFF' : '#DC2626',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                {filterOnlyLowStock ? 'Show All Stock Items' : `Filter ${lowStockCount} Low-Stock Only`}
+              </button>
+            </div>
+          )}
+
           {/* Categories */}
           <div className="responsive-subtabs" style={{ display: 'flex', gap: '8px' }}>
             {['All', 'Kitchen', 'Amenities', 'Linen', 'Minibar', 'Housekeeping'].map((cat) => (
@@ -134,27 +195,51 @@ export const InventoryView: React.FC = () => {
               <thead>
                 <tr>
                   <th>Item Name & Category</th>
-                  <th>Current Stock</th>
-                  <th>Min Threshold</th>
+                  <th style={{ width: '220px' }}>Current Stock Level</th>
+                  <th>Min Alert Threshold</th>
                   <th>Unit Cost</th>
                   <th>Supplier</th>
-                  <th>Status</th>
+                  <th>Status & Health</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredStock.map((item) => {
                   const isLow = item.currentStock <= item.minThreshold;
+                  const ratio = Math.min(100, Math.round((item.currentStock / (item.minThreshold * 2)) * 100));
+                  const isWarning = !isLow && item.currentStock <= item.minThreshold * 1.3;
+
                   return (
-                    <tr key={item.id}>
+                    <tr 
+                      key={item.id}
+                      style={{
+                        backgroundColor: isLow ? 'rgba(239, 68, 68, 0.04)' : undefined,
+                        borderLeft: isLow ? '4px solid #EF4444' : '4px solid transparent'
+                      }}
+                    >
                       <td>
                         <div style={{ fontWeight: '800', color: '#0F172A' }}>{item.name}</div>
-                        <div style={{ fontSize: '11px', color: '#94A3B8' }}>{item.category} • Last: {item.lastRestocked}</div>
+                        <div style={{ fontSize: '11px', color: '#94A3B8' }}>{item.category} • Last restock: {item.lastRestocked}</div>
                       </td>
                       <td>
-                        <span style={{ fontSize: '14px', fontWeight: '800', color: isLow ? '#EF4444' : '#0F172A' }}>
-                          {item.currentStock} {item.unit}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '800', color: isLow ? '#DC2626' : '#0F172A' }}>
+                            {item.currentStock} {item.unit}
+                          </span>
+                          <span style={{ fontSize: '10px', fontWeight: '700', color: isLow ? '#DC2626' : '#64748B' }}>
+                            {isLow ? 'CRITICAL' : isWarning ? 'LOW' : 'OPTIMAL'}
+                          </span>
+                        </div>
+                        {/* Visual Progress Indicator Gauge */}
+                        <div style={{ width: '100%', height: '6px', backgroundColor: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{
+                            width: `${Math.max(8, ratio)}%`,
+                            height: '100%',
+                            backgroundColor: isLow ? '#EF4444' : isWarning ? '#F59E0B' : '#10B981',
+                            borderRadius: '4px',
+                            transition: 'width 0.3s ease'
+                          }} />
+                        </div>
                       </td>
                       <td>
                         <span style={{ fontSize: '12px', color: '#64748B' }}>
@@ -172,15 +257,32 @@ export const InventoryView: React.FC = () => {
                           <span style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '4px',
+                            gap: '5px',
                             backgroundColor: '#FEE2E2',
                             color: '#991B1B',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            padding: '4px 10px',
+                            borderRadius: '9999px',
+                            border: '1px solid #FCA5A5',
+                            boxShadow: '0 0 10px rgba(239, 68, 68, 0.2)'
+                          }}>
+                            <AlertTriangle size={13} color="#DC2626" />
+                            BELOW THRESHOLD
+                          </span>
+                        ) : isWarning ? (
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            backgroundColor: '#FEF3C7',
+                            color: '#92400E',
                             fontSize: '11px',
                             fontWeight: '700',
                             padding: '3px 8px',
                             borderRadius: '9999px'
                           }}>
-                            <AlertTriangle size={12} /> Low Stock Alert
+                            Approaching Min
                           </span>
                         ) : (
                           <span style={{
@@ -194,7 +296,7 @@ export const InventoryView: React.FC = () => {
                             padding: '3px 8px',
                             borderRadius: '9999px'
                           }}>
-                            <CheckCircle2 size={12} /> Optimal
+                            <CheckCircle2 size={12} /> Optimal Stock
                           </span>
                         )}
                       </td>
@@ -204,7 +306,7 @@ export const InventoryView: React.FC = () => {
                             setRestockModal(item);
                             setRestockQty(item.minThreshold * 2);
                           }}
-                          className="btn-secondary"
+                          className={isLow ? 'btn-primary' : 'btn-secondary'}
                           style={{ padding: '6px 12px', fontSize: '11px' }}
                         >
                           <Plus size={13} /> Restock
@@ -216,7 +318,6 @@ export const InventoryView: React.FC = () => {
               </tbody>
             </table>
           </div>
-
         </div>
       ) : (
         /* Laundry Batch Cycles */

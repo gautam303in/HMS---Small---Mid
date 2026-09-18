@@ -19,8 +19,36 @@ import {
   Sparkles,
   Upload,
   Image as ImageIcon,
-  X
+  X,
+  Sliders,
+  RotateCcw,
+  Save,
+  Download
 } from 'lucide-react';
+import {
+  INDIAN_STATES,
+  INVENTORY_UNITS,
+  STAFF_ROLES,
+  STAFF_DEPARTMENTS,
+  STAFF_SHIFTS,
+  MENU_PREP_TIMES,
+  SUPPORTED_CURRENCIES,
+  TIMEZONES,
+  HSN_SAC_CODES
+} from '../utils/dropdownData';
+import {
+  loadValidationRules,
+  saveValidationRules,
+  resetValidationRulesToDefaults,
+  testRuleValue,
+  PRESET_PATTERNS
+} from '../utils/validationEngine';
+import type {
+  FieldValidationRule,
+  EntityKey,
+  SystemValidationConfig,
+  ValidationPreset
+} from '../utils/validationEngine';
 
 interface Room {
   id: string;
@@ -83,6 +111,7 @@ interface HotelProperty {
   timezone: string;
   gstin: string;
   hsnSacCode: string;
+  state?: string;
   address?: string;
   contactEmail?: string;
   contactPhone?: string;
@@ -91,7 +120,7 @@ interface HotelProperty {
 
 export const AdminMasterView: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<
-    'rooms' | 'rates' | 'menu' | 'inventory' | 'staff' | 'profile' | 'supabase'
+    'rooms' | 'rates' | 'menu' | 'inventory' | 'staff' | 'profile' | 'supabase' | 'validations'
   >('rooms');
 
   // Master Data State
@@ -114,11 +143,20 @@ export const AdminMasterView: React.FC = () => {
     timezone: 'Asia/Kolkata',
     gstin: '27AAAAA0000A1Z5',
     hsnSacCode: '996311',
+    state: 'Goa',
     address: 'Grand Azure Boulevard, Candolim Beach Road, North Goa 403515',
     contactEmail: 'gm@grandazure.com',
     contactPhone: '+91 832 249 9000',
     logoUrl: ''
   });
+
+  // Dynamic Validation Rules State
+  const [validationRules, setValidationRules] = useState<SystemValidationConfig>(() => loadValidationRules());
+  const [activeValidationEntity, setActiveValidationEntity] = useState<EntityKey>('guestCheckIn');
+  const [selectedRuleForTesting, setSelectedRuleForTesting] = useState<string>('g-3');
+  const [testValue, setTestValue] = useState<string>('+919876543210');
+  const [testResult, setTestResult] = useState<{ isValid: boolean; error?: string } | null>(null);
+  const [isSavingRules, setIsSavingRules] = useState(false);
 
   // Supabase State
   const [supabaseUrl, setSupabaseUrl] = useState('');
@@ -489,6 +527,56 @@ export const AdminMasterView: React.FC = () => {
   };
 
   // -------------------------------------------------------------
+  // FIELD VALIDATIONS RULES MANAGEMENT HANDLERS
+  // -------------------------------------------------------------
+  const handleRuleChange = (entity: EntityKey, ruleId: string, updates: Partial<FieldValidationRule>) => {
+    setValidationRules(prev => {
+      const nextEntityRules = (prev[entity] || []).map(r => {
+        if (r.id === ruleId) {
+          return { ...r, ...updates };
+        }
+        return r;
+      });
+      return { ...prev, [entity]: nextEntityRules };
+    });
+  };
+
+  const handleSaveAllValidationRules = async () => {
+    setIsSavingRules(true);
+    try {
+      saveValidationRules(validationRules);
+      // Also persist to backend if accessible
+      await fetch(`${API_BASE}/hotel/field-validations`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validationRules)
+      }).catch(() => null);
+
+      showNotification('Field validation rules committed & applied across all forms!');
+    } catch {
+      showNotification('Failed to commit validation rules', 'error');
+    } finally {
+      setIsSavingRules(false);
+    }
+  };
+
+  const handleResetValidationRules = () => {
+    if (!window.confirm('Reset all field validation rules to default system specifications?')) return;
+    const fresh = resetValidationRulesToDefaults();
+    setValidationRules(fresh);
+    showNotification('Field validation rules reset to system defaults');
+  };
+
+  const handleExportValidationRules = () => {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(validationRules, null, 2));
+    const dlAnchor = document.createElement('a');
+    dlAnchor.setAttribute('href', dataStr);
+    dlAnchor.setAttribute('download', `grand_azure_validations_${new Date().toISOString().slice(0, 10)}.json`);
+    dlAnchor.click();
+    showNotification('Validation rules exported as JSON file');
+  };
+
+  // -------------------------------------------------------------
   // SUPABASE ACTIONS
   // -------------------------------------------------------------
   const handleConnectSupabase = async (e: React.FormEvent) => {
@@ -679,7 +767,8 @@ export const AdminMasterView: React.FC = () => {
           { id: 'inventory', label: `Inventory Items (${inventory.length})`, icon: Package },
           { id: 'staff', label: `Staff & Roster (${staff.length})`, icon: Users },
           { id: 'profile', label: 'Hotel Master Profile', icon: Building2 },
-          { id: 'supabase', label: 'Supabase Database Link', icon: Database, badge: supabaseStatus.isConnected ? 'Live' : 'Ready' }
+          { id: 'supabase', label: 'Supabase Database Link', icon: Database, badge: supabaseStatus.isConnected ? 'Live' : 'Ready' },
+          { id: 'validations', label: 'Field Validations', icon: ShieldCheck }
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeSubTab === tab.id;
@@ -1510,13 +1599,22 @@ export const AdminMasterView: React.FC = () => {
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#334155', marginBottom: '4px' }}>
                     Default Currency
                   </label>
-                  <input
-                    type="text"
-                    value={`${property.currencyCode} (${property.currencySymbol})`}
-                    disabled
+                  <select
+                    value={property.currencyCode}
+                    onChange={e => {
+                      const found = SUPPORTED_CURRENCIES.find(c => c.value === e.target.value);
+                      setProperty({
+                        ...property,
+                        currencyCode: e.target.value,
+                        currencySymbol: found?.code || '₹'
+                      });
+                    }}
                     className="input-clean"
-                    style={{ backgroundColor: '#F8FAFC', color: '#64748B' }}
-                  />
+                  >
+                    {SUPPORTED_CURRENCIES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -1537,13 +1635,49 @@ export const AdminMasterView: React.FC = () => {
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#334155', marginBottom: '4px' }}>
                     HSN/SAC Code (Lodging)
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={property.hsnSacCode}
                     onChange={e => setProperty({ ...property, hsnSacCode: e.target.value })}
                     className="input-clean"
                     required
-                  />
+                  >
+                    {HSN_SAC_CODES.map(h => (
+                      <option key={h.value} value={h.value}>{h.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#334155', marginBottom: '4px' }}>
+                    State / Union Territory (GST Registration)
+                  </label>
+                  <select
+                    value={property.state || 'Goa'}
+                    onChange={e => setProperty({ ...property, state: e.target.value })}
+                    className="input-clean"
+                    required
+                  >
+                    {INDIAN_STATES.map(s => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#334155', marginBottom: '4px' }}>
+                    Operating Timezone
+                  </label>
+                  <select
+                    value={property.timezone}
+                    onChange={e => setProperty({ ...property, timezone: e.target.value })}
+                    className="input-clean"
+                    required
+                  >
+                    {TIMEZONES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -1851,6 +1985,410 @@ export const AdminMasterView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
+      {/* TAB: FIELD VALIDATIONS & DATA INTEGRITY RULES */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'validations' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* Header Card with Global Actions */}
+          <div className="lodgify-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldCheck size={22} color="#0E94A8" />
+                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+                  Enterprise Field Validation & Data Policy Console
+                </h3>
+              </div>
+              <p style={{ fontSize: '13px', color: '#64748B', margin: '4px 0 0' }}>
+                Configure mandatory inputs, length restrictions, numeric thresholds, and regulatory format rules (Phone, Email, GSTIN, PAN, Aadhaar) enforced in real time.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={handleExportValidationRules}
+                className="btn-secondary"
+                style={{ fontSize: '12px', padding: '8px 14px' }}
+                title="Export active rules configuration as JSON"
+              >
+                <Download size={14} />
+                <span>Export JSON</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetValidationRules}
+                className="btn-secondary"
+                style={{ fontSize: '12px', padding: '8px 14px', color: '#B91C1C', borderColor: '#FECDD3' }}
+                title="Reset all fields to standard baseline"
+              >
+                <RotateCcw size={14} />
+                <span>Reset Defaults</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveAllValidationRules}
+                disabled={isSavingRules}
+                className="btn-primary"
+                style={{ fontSize: '12px', padding: '8px 18px' }}
+              >
+                <Save size={14} />
+                <span>{isSavingRules ? 'Saving...' : 'Save & Enforce Rules'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Entity Selector Tabs */}
+          <div className="responsive-subtabs" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {[
+              { id: 'guestCheckIn', label: '1. Guest Check-In & KYC' },
+              { id: 'reservation', label: '2. Reservation Booking' },
+              { id: 'hotelProfile', label: '3. Hotel Master Profile' },
+              { id: 'inventorySku', label: '4. Inventory SKU' },
+              { id: 'staffMember', label: '5. Staff Roster' }
+            ].map(ent => (
+              <button
+                key={ent.id}
+                type="button"
+                onClick={() => {
+                  setActiveValidationEntity(ent.id as EntityKey);
+                  const firstRule = validationRules[ent.id as EntityKey]?.[0];
+                  if (firstRule) {
+                    setSelectedRuleForTesting(firstRule.id);
+                    setTestResult(null);
+                  }
+                }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '9999px',
+                  border: activeValidationEntity === ent.id ? '2px solid #0E94A8' : '1px solid #E2E8F0',
+                  backgroundColor: activeValidationEntity === ent.id ? '#0E94A8' : '#FFFFFF',
+                  color: activeValidationEntity === ent.id ? '#FFFFFF' : '#475569',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {ent.label} ({(validationRules[ent.id as EntityKey] || []).length})
+              </button>
+            ))}
+          </div>
+
+          {/* Main 2-Column Grid: Config Table/Cards (Left) + Interactive Sandbox (Right) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.8fr) minmax(320px, 1fr)', gap: '20px' }}>
+            
+            {/* Left: Configurable Rule Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {(validationRules[activeValidationEntity] || []).map((rule) => {
+                return (
+                  <div
+                    key={rule.id}
+                    className="lodgify-card"
+                    style={{
+                      padding: '18px 20px',
+                      borderLeft: rule.enabled ? '4px solid #0E94A8' : '4px solid #CBD5E1',
+                      opacity: rule.enabled ? 1 : 0.65
+                    }}
+                  >
+                    {/* Header: Label, Key, and Active Toggle */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>
+                          {rule.fieldLabel}
+                        </span>
+                        <code style={{ fontSize: '11px', backgroundColor: '#F1F5F9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>
+                          {rule.fieldKey}
+                        </code>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: rule.enabled ? '#059669' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={rule.enabled}
+                            onChange={e => handleRuleChange(activeValidationEntity, rule.id, { enabled: e.target.checked })}
+                          />
+                          <span>{rule.enabled ? 'Rule Active' : 'Rule Bypassed'}</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Rule Controls Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                      
+                      {/* Mandatory Toggle */}
+                      <div className="form-field">
+                        <label className="form-label">Requirement Mode</label>
+                        <select
+                          value={rule.required ? 'true' : 'false'}
+                          onChange={e => handleRuleChange(activeValidationEntity, rule.id, { required: e.target.value === 'true' })}
+                          className="input-clean"
+                          style={{ fontSize: '12px', padding: '8px 12px' }}
+                        >
+                          <option value="true">Mandatory (Required)</option>
+                          <option value="false">Optional (Non-Mandatory)</option>
+                        </select>
+                      </div>
+
+                      {/* Validation Preset Pattern */}
+                      <div className="form-field">
+                        <label className="form-label">Format / Pattern Rule</label>
+                        <select
+                          value={rule.preset}
+                          onChange={e => handleRuleChange(activeValidationEntity, rule.id, { preset: e.target.value as ValidationPreset })}
+                          className="input-clean"
+                          style={{ fontSize: '12px', padding: '8px 12px' }}
+                        >
+                          <option value="none">None (Any text allowed)</option>
+                          <option value="phone_india">Indian Mobile (10 digits)</option>
+                          <option value="phone_intl">International Phone (+E.164)</option>
+                          <option value="email">Standard Email Address</option>
+                          <option value="gstin_india">Indian GSTIN (15 characters)</option>
+                          <option value="pan_india">Indian PAN (10 characters)</option>
+                          <option value="aadhaar_india">Indian Aadhaar (12 digits)</option>
+                          <option value="positive_number">Non-Negative Number / Currency</option>
+                          <option value="alphanumeric">Alphanumeric Only</option>
+                          <option value="custom">Custom Regex Pattern</option>
+                        </select>
+                      </div>
+
+                      {/* Min / Max Length or Value Bounds */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                        <div className="form-field">
+                          <label className="form-label">Min Limit</label>
+                          <input
+                            type="number"
+                            value={rule.minLength ?? rule.minValue ?? ''}
+                            onChange={e => {
+                              const val = e.target.value === '' ? undefined : Number(e.target.value);
+                              if (rule.preset === 'positive_number') {
+                                handleRuleChange(activeValidationEntity, rule.id, { minValue: val });
+                              } else {
+                                handleRuleChange(activeValidationEntity, rule.id, { minLength: val });
+                              }
+                            }}
+                            className="input-clean"
+                            style={{ fontSize: '12px', padding: '8px' }}
+                            placeholder="Min"
+                          />
+                        </div>
+                        <div className="form-field">
+                          <label className="form-label">Max Limit</label>
+                          <input
+                            type="number"
+                            value={rule.maxLength ?? rule.maxValue ?? ''}
+                            onChange={e => {
+                              const val = e.target.value === '' ? undefined : Number(e.target.value);
+                              if (rule.preset === 'positive_number') {
+                                handleRuleChange(activeValidationEntity, rule.id, { maxValue: val });
+                              } else {
+                                handleRuleChange(activeValidationEntity, rule.id, { maxLength: val });
+                              }
+                            }}
+                            className="input-clean"
+                            style={{ fontSize: '12px', padding: '8px' }}
+                            placeholder="Max"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Custom Regex (if applicable) */}
+                    {rule.preset === 'custom' && (
+                      <div className="form-field" style={{ marginBottom: '12px' }}>
+                        <label className="form-label">Custom Regular Expression Pattern</label>
+                        <input
+                          type="text"
+                          value={rule.customRegex || ''}
+                          onChange={e => handleRuleChange(activeValidationEntity, rule.id, { customRegex: e.target.value })}
+                          className="input-clean"
+                          style={{ fontSize: '12px', fontFamily: 'monospace' }}
+                          placeholder="^[A-Z]{3}-\d{4}$"
+                        />
+                      </div>
+                    )}
+
+                    {/* Custom Error Message */}
+                    <div className="form-field">
+                      <label className="form-label">Custom Error Message (shown on failure)</label>
+                      <input
+                        type="text"
+                        value={rule.errorMessage}
+                        onChange={e => handleRuleChange(activeValidationEntity, rule.id, { errorMessage: e.target.value })}
+                        className="input-clean"
+                        style={{ fontSize: '12px', padding: '8px 12px' }}
+                        placeholder="e.g. Please enter a valid 10-digit mobile number"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right: Interactive Live Sandbox Simulator */}
+            <div style={{ position: 'sticky', top: '20px', height: 'fit-content' }}>
+              <div className="lodgify-card" style={{ border: '2px solid #0E94A8', backgroundColor: '#F8FAFC' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                  <Sliders size={18} color="#0E94A8" />
+                  <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+                    Live Rule Simulator
+                  </h4>
+                </div>
+
+                <p style={{ fontSize: '12px', color: '#64748B', marginBottom: '16px' }}>
+                  Test rule logic in real time against sample test values before saving.
+                </p>
+
+                {/* Target Field Select */}
+                <div className="form-field" style={{ marginBottom: '14px' }}>
+                  <label className="form-label">Select Field Rule to Test</label>
+                  <select
+                    value={selectedRuleForTesting}
+                    onChange={e => {
+                      setSelectedRuleForTesting(e.target.value);
+                      setTestResult(null);
+                    }}
+                    className="input-clean"
+                    style={{ fontSize: '12px', backgroundColor: '#FFFFFF' }}
+                  >
+                    {(validationRules[activeValidationEntity] || []).map(r => (
+                      <option key={r.id} value={r.id}>
+                        {r.fieldLabel} ({r.required ? 'Mandatory' : 'Optional'}, {r.preset})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Active Rule Details Box */}
+                {(() => {
+                  const currentRule = (validationRules[activeValidationEntity] || []).find(r => r.id === selectedRuleForTesting) 
+                    || (validationRules[activeValidationEntity] || [])[0];
+                  if (!currentRule) return null;
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid #E2E8F0',
+                        fontSize: '11px',
+                        color: '#475569'
+                      }}>
+                        <div style={{ fontWeight: '700', color: '#0F172A', marginBottom: '4px' }}>
+                          Active Criteria for {currentRule.fieldLabel}:
+                        </div>
+                        <div>• Status: {currentRule.enabled ? 'Enabled' : 'Disabled'}</div>
+                        <div>• Requirement: {currentRule.required ? 'Mandatory' : 'Optional'}</div>
+                        <div>• Pattern: {PRESET_PATTERNS[currentRule.preset]?.description || currentRule.preset}</div>
+                        {(currentRule.minLength || currentRule.maxLength) && (
+                          <div>• Length Range: {currentRule.minLength || 0} to {currentRule.maxLength || '∞'} chars</div>
+                        )}
+                        {(currentRule.minValue !== undefined || currentRule.maxValue !== undefined) && (
+                          <div>• Value Range: {currentRule.minValue ?? 0} to {currentRule.maxValue ?? '∞'}</div>
+                        )}
+                      </div>
+
+                      {/* Test Input */}
+                      <div className="form-field">
+                        <label className="form-label">Test Input Sample Value</label>
+                        <input
+                          type="text"
+                          value={testValue}
+                          onChange={e => {
+                            setTestValue(e.target.value);
+                            setTestResult(testRuleValue(currentRule, e.target.value));
+                          }}
+                          className="input-clean"
+                          placeholder={PRESET_PATTERNS[currentRule.preset]?.placeholder || 'Enter value...'}
+                          style={{ fontSize: '13px', backgroundColor: '#FFFFFF' }}
+                        />
+                      </div>
+
+                      {/* Quick Sample Fill Buttons */}
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const sample = PRESET_PATTERNS[currentRule.preset]?.placeholder || 'ValidText123';
+                            setTestValue(sample);
+                            setTestResult(testRuleValue(currentRule, sample));
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid #BBF7D0',
+                            backgroundColor: '#F0FDF4',
+                            color: '#15803D',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Load Valid Sample
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const invalid = '??--bad--!!';
+                            setTestValue(invalid);
+                            setTestResult(testRuleValue(currentRule, invalid));
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid #FECDD3',
+                            backgroundColor: '#FFF1F2',
+                            color: '#BE123C',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Load Invalid Sample
+                        </button>
+                      </div>
+
+                      {/* Evaluation Result Alert */}
+                      {testResult !== null && (
+                        <div style={{
+                          padding: '12px 14px',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '10px',
+                          backgroundColor: testResult.isValid ? '#DCFCE7' : '#FEE2E2',
+                          border: `1px solid ${testResult.isValid ? '#86EFAC' : '#FCA5A5'}`,
+                          animation: 'fadeIn 0.2s ease'
+                        }}>
+                          {testResult.isValid ? (
+                            <CheckCircle2 size={18} color="#15803D" style={{ flexShrink: 0, marginTop: '2px' }} />
+                          ) : (
+                            <AlertTriangle size={18} color="#B91C1C" style={{ flexShrink: 0, marginTop: '2px' }} />
+                          )}
+                          <div>
+                            <strong style={{ fontSize: '12px', color: testResult.isValid ? '#166534' : '#991B1B', display: 'block' }}>
+                              {testResult.isValid ? 'Validation Succeeded' : 'Validation Failed'}
+                            </strong>
+                            <span style={{ fontSize: '11px', color: testResult.isValid ? '#15803D' : '#B91C1C' }}>
+                              {testResult.isValid ? 'Value satisfies all required formatting criteria.' : testResult.error}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
       {/* MODAL: ADD / EDIT ROOM */}
       {/* ========================================================================= */}
       {roomModal.open && (
@@ -1884,15 +2422,16 @@ export const AdminMasterView: React.FC = () => {
                 </div>
                 <div className="form-field">
                   <label className="form-label">Floor</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    required
+                  <select
                     value={roomModal.data.floor || 1}
                     onChange={e => setRoomModal({ ...roomModal, data: { ...roomModal.data, floor: Number(e.target.value) } })}
                     className="input-clean"
-                  />
+                    required
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(f => (
+                      <option key={f} value={f}>Floor {f}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -1926,16 +2465,20 @@ export const AdminMasterView: React.FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                 <div className="form-field">
-                  <label className="form-label">Max Guests</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    required
+                  <label className="form-label">Max Guests Capacity</label>
+                  <select
                     value={roomModal.data.maxGuests || 2}
                     onChange={e => setRoomModal({ ...roomModal, data: { ...roomModal.data, maxGuests: Number(e.target.value) } })}
                     className="input-clean"
-                  />
+                    required
+                  >
+                    <option value={1}>1 Guest (Single)</option>
+                    <option value={2}>2 Guests (Double)</option>
+                    <option value={3}>3 Guests (Triple)</option>
+                    <option value={4}>4 Guests (Family Suite)</option>
+                    <option value={6}>6 Guests (Grand Suite)</option>
+                    <option value={8}>8 Guests (Presidential Villa)</option>
+                  </select>
                 </div>
                 <div className="form-field">
                   <label className="form-label">Initial Status</label>
@@ -2045,13 +2588,16 @@ export const AdminMasterView: React.FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                 <div className="form-field">
-                  <label className="form-label">Prep Time</label>
-                  <input
-                    type="text"
-                    value={menuModal.data.prepTime || '15 min'}
+                  <label className="form-label">Preparation Time</label>
+                  <select
+                    value={menuModal.data.prepTime || '15 mins'}
                     onChange={e => setMenuModal({ ...menuModal, data: { ...menuModal.data, prepTime: e.target.value } })}
                     className="input-clean"
-                  />
+                  >
+                    {MENU_PREP_TIMES.map(pt => (
+                      <option key={pt.value} value={pt.value}>{pt.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-field">
                   <label className="form-label">Availability</label>
@@ -2142,14 +2688,17 @@ export const AdminMasterView: React.FC = () => {
                   </select>
                 </div>
                 <div className="form-field">
-                  <label className="form-label">Unit</label>
-                  <input
-                    type="text"
+                  <label className="form-label">Unit of Measure</label>
+                  <select
                     value={invModal.data.unit || 'pcs'}
                     onChange={e => setInvModal({ ...invModal, data: { ...invModal.data, unit: e.target.value } })}
                     className="input-clean"
-                    placeholder="pcs, kg, bottles..."
-                  />
+                    required
+                  >
+                    {INVENTORY_UNITS.map(u => (
+                      <option key={u.value} value={u.value}>{u.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -2252,14 +2801,17 @@ export const AdminMasterView: React.FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                 <div className="form-field">
-                  <label className="form-label">Role</label>
-                  <input
-                    type="text"
-                    required
-                    value={staffModal.data.role || 'Front Desk Officer'}
+                  <label className="form-label">Role / Designation</label>
+                  <select
+                    value={staffModal.data.role || 'Front Desk Agent'}
                     onChange={e => setStaffModal({ ...staffModal, data: { ...staffModal.data, role: e.target.value } })}
                     className="input-clean"
-                  />
+                    required
+                  >
+                    {STAFF_ROLES.map(r => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-field">
                   <label className="form-label">Department</label>
@@ -2267,27 +2819,27 @@ export const AdminMasterView: React.FC = () => {
                     value={staffModal.data.department || 'Front Office'}
                     onChange={e => setStaffModal({ ...staffModal, data: { ...staffModal.data, department: e.target.value } })}
                     className="input-clean"
+                    required
                   >
-                    <option value="Front Office">Front Office</option>
-                    <option value="Housekeeping">Housekeeping</option>
-                    <option value="Food & Beverage">Food & Beverage</option>
-                    <option value="Administration">Administration</option>
-                    <option value="Engineering">Engineering</option>
+                    {STAFF_DEPARTMENTS.map(d => (
+                      <option key={d.value} value={d.value}>{d.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                 <div className="form-field">
-                  <label className="form-label">Shift</label>
+                  <label className="form-label">Shift Timing</label>
                   <select
-                    value={staffModal.data.shift || 'Morning (06:00-14:00)'}
+                    value={staffModal.data.shift || 'Morning (07:00 - 15:30)'}
                     onChange={e => setStaffModal({ ...staffModal, data: { ...staffModal.data, shift: e.target.value } })}
                     className="input-clean"
+                    required
                   >
-                    <option value="Morning (06:00-14:00)">Morning (06:00-14:00)</option>
-                    <option value="Evening (14:00-22:00)">Evening (14:00-22:00)</option>
-                    <option value="Night (22:00-06:00)">Night (22:00-06:00)</option>
+                    {STAFF_SHIFTS.map(s => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-field">
@@ -2299,14 +2851,17 @@ export const AdminMasterView: React.FC = () => {
                   >
                     <option value="On Duty">On Duty</option>
                     <option value="Off Duty">Off Duty</option>
+                    <option value="Active">Active</option>
                     <option value="On Leave">On Leave</option>
+                    <option value="Probation">Probation</option>
+                    <option value="Terminated">Terminated</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                 <div className="form-field">
-                  <label className="form-label">Phone</label>
+                  <label className="form-label">Contact Phone</label>
                   <input
                     type="text"
                     value={staffModal.data.phone || ''}
@@ -2316,12 +2871,13 @@ export const AdminMasterView: React.FC = () => {
                   />
                 </div>
                 <div className="form-field">
-                  <label className="form-label">Email</label>
+                  <label className="form-label">Work Email</label>
                   <input
                     type="email"
                     value={staffModal.data.email || ''}
                     onChange={e => setStaffModal({ ...staffModal, data: { ...staffModal.data, email: e.target.value } })}
                     className="input-clean"
+                    placeholder="name@grandazure.com"
                   />
                 </div>
               </div>
@@ -2335,7 +2891,7 @@ export const AdminMasterView: React.FC = () => {
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary">
-                  Save Staff Member
+                  Save Staff
                 </button>
               </div>
             </form>

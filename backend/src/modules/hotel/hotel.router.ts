@@ -138,6 +138,17 @@ hotelRouter.put('/hotel/properties', (req: Request, res: Response) => {
   res.json(store.hotelProperty);
 });
 
+// Dynamic Field Validation Rules Endpoints
+hotelRouter.get('/hotel/field-validations', (req: Request, res: Response) => {
+  res.json(store.fieldValidations || {});
+});
+
+hotelRouter.put('/hotel/field-validations', (req: Request, res: Response) => {
+  store.fieldValidations = req.body;
+  store.logAudit('Admin', 'Administrator', 'VALIDATION_RULES_UPDATED', 'Admin modified field validation rules configuration');
+  res.json({ message: 'Validation rules updated successfully', rules: store.fieldValidations });
+});
+
 hotelRouter.get('/dashboard', (req: Request, res: Response) => {
   const total = store.rooms.length;
   const occupied = store.rooms.filter(r => r.status === 'Occupied').length;

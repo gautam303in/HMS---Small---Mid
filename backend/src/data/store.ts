@@ -159,6 +159,7 @@ class DomainDataStore {
   public systemUsers: SystemUser[] = [];
   public menuItems: MenuItem[] = [];
   public hotelProperty: HotelProperty = { ...initialHotelProperty };
+  public fieldValidations: any = null;
 
   private constructor() {
     this.reseed();
