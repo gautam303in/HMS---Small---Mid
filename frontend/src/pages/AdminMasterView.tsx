@@ -16,7 +16,10 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   ShieldCheck, 
-  Sparkles
+  Sparkles,
+  Upload,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 
 interface Room {
@@ -83,6 +86,7 @@ interface HotelProperty {
   address?: string;
   contactEmail?: string;
   contactPhone?: string;
+  logoUrl?: string;
 }
 
 export const AdminMasterView: React.FC = () => {
@@ -112,7 +116,8 @@ export const AdminMasterView: React.FC = () => {
     hsnSacCode: '996311',
     address: 'Grand Azure Boulevard, Candolim Beach Road, North Goa 403515',
     contactEmail: 'gm@grandazure.com',
-    contactPhone: '+91 832 249 9000'
+    contactPhone: '+91 832 249 9000',
+    logoUrl: ''
   });
 
   // Supabase State
@@ -189,7 +194,14 @@ export const AdminMasterView: React.FC = () => {
       if (invRes && invRes.ok) setInventory(await invRes.json());
       if (staffRes && staffRes.ok) setStaff(await staffRes.json());
       if (pricingRes && pricingRes.ok) setPricingConfig(await pricingRes.json());
-      if (propRes && propRes.ok) setProperty(await propRes.json());
+      if (propRes && propRes.ok) {
+        const propData = await propRes.json();
+        setProperty(propData);
+        if (propData.logoUrl) {
+          localStorage.setItem('hms_hotel_logo', propData.logoUrl);
+          window.dispatchEvent(new Event('hms_logo_updated'));
+        }
+      }
       if (supaRes && supaRes.ok) {
         const supaData = await supaRes.json();
         setSupabaseStatus(supaData);
@@ -425,8 +437,35 @@ export const AdminMasterView: React.FC = () => {
   };
 
   // -------------------------------------------------------------
-  // HOTEL PROPERTY MASTER
+  // HOTEL PROPERTY MASTER & LOGO UPLOAD
   // -------------------------------------------------------------
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showNotification('Logo image must be smaller than 2MB', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setProperty(prev => ({ ...prev, logoUrl: result }));
+        showNotification('Logo selected! Click "Save Hotel Master Profile" to commit changes.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setProperty(prev => ({ ...prev, logoUrl: '' }));
+    localStorage.removeItem('hms_hotel_logo');
+    window.dispatchEvent(new Event('hms_logo_updated'));
+    showNotification('Logo removed. Click "Save Hotel Master Profile" to confirm.');
+  };
+
   const handleSaveProperty = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -436,7 +475,13 @@ export const AdminMasterView: React.FC = () => {
         body: JSON.stringify(property)
       });
       if (!res.ok) throw new Error('Failed to update hotel property');
-      showNotification('Hotel Master Profile updated successfully!');
+      if (property.logoUrl) {
+        localStorage.setItem('hms_hotel_logo', property.logoUrl);
+      } else {
+        localStorage.removeItem('hms_hotel_logo');
+      }
+      window.dispatchEvent(new Event('hms_logo_updated'));
+      showNotification('Hotel Master Profile & Logo updated successfully!');
       loadMasterData();
     } catch (err: any) {
       showNotification(err.message, 'error');
@@ -1328,6 +1373,118 @@ export const AdminMasterView: React.FC = () => {
             </p>
 
             <form onSubmit={handleSaveProperty} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              {/* Hotel Brand Logo Upload Section */}
+              <div style={{
+                padding: '16px 20px',
+                borderRadius: '12px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ImageIcon size={18} color="#0E94A8" />
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '800', color: '#0F172A' }}>
+                        Hotel Brand Logo
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748B' }}>
+                        Upload your official property logo (PNG, JPG, SVG, WebP up to 2MB).
+                      </div>
+                    </div>
+                  </div>
+                  {property.logoUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '11px',
+                        color: '#EF4444',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: '700'
+                      }}
+                    >
+                      <X size={14} /> Remove Logo
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                  {/* Logo Preview */}
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '12px',
+                    backgroundColor: '#FFFFFF',
+                    border: '2px dashed #CBD5E1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                  }}>
+                    {property.logoUrl ? (
+                      <img
+                        src={property.logoUrl}
+                        alt="Property Logo Preview"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <div style={{ textAlign: 'center', color: '#94A3B8' }}>
+                        <ImageIcon size={28} />
+                        <div style={{ fontSize: '9px', marginTop: '2px' }}>No Logo</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload Controls */}
+                  <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 16px',
+                      backgroundColor: '#0E94A8',
+                      color: '#FFFFFF',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      width: 'fit-content'
+                    }}>
+                      <Upload size={14} />
+                      <span>Choose Logo File</span>
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                        onChange={handleLogoFileUpload}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '11px', color: '#94A3B8' }}>or URL:</span>
+                      <input
+                        type="url"
+                        placeholder="https://example.com/logo.png"
+                        value={property.logoUrl || ''}
+                        onChange={e => setProperty({ ...property, logoUrl: e.target.value })}
+                        className="input-clean"
+                        style={{ fontSize: '11px', padding: '6px 10px', height: '32px' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#334155', marginBottom: '4px' }}>
                   Property Legal Name

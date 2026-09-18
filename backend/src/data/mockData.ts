@@ -392,5 +392,6 @@ export const initialHotelProperty: HotelProperty = {
   hsnSacCode: '996311',
   address: 'Grand Azure Boulevard, Candolim Beach Road, North Goa 403515, India',
   contactEmail: 'gm@grandazure.com',
-  contactPhone: '+91 832 249 9000'
+  contactPhone: '+91 832 249 9000',
+  logoUrl: ''
 };

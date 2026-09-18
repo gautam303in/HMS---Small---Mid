@@ -283,5 +283,6 @@ export interface HotelProperty {
   address?: string;
   contactEmail?: string;
   contactPhone?: string;
+  logoUrl?: string;
 }
 
