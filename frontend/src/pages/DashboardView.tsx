@@ -4,7 +4,7 @@ import {
   ArrowDownRight, 
   LogIn, 
   LogOut, 
-  DollarSign, 
+  IndianRupee, 
   Bookmark, 
   MoreHorizontal, 
   Plus, 
@@ -201,11 +201,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _on
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <DollarSign size={16} color="#0F172A" />
+              <IndianRupee size={16} color="#0F172A" />
             </div>
           </div>
           <div style={{ fontSize: '32px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px', marginBottom: '8px' }}>
-            $123,980
+            ₹123,980
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{
@@ -310,7 +310,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _on
 
               {/* SVG Wavy Revenue Line Chart with Badge */}
               <div style={{ position: 'relative', width: '100%', height: '180px', marginTop: '10px' }}>
-                {/* Floating Badge $315,060 */}
+                {/* Floating Badge ₹315,060 */}
                 <div style={{
                   position: 'absolute',
                   top: '18px',
@@ -325,7 +325,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _on
                   boxShadow: '0 4px 10px rgba(0,0,0,0.06)',
                   zIndex: 5
                 }}>
-                  $315,060
+                  ₹315,060
                   {/* Small triangular pointer */}
                   <div style={{
                     position: 'absolute',
