@@ -545,3 +545,6 @@ npm test
 - [ ] Automated daily backup cron job is scheduled at 03:00 AM.
 - [ ] Health check `https://hms.yourdomain.com/api/health` returns `200 OK`.
 - [ ] Hotel Master Profile and Logo Upload functions smoothly in Admin view.
+- [ ] Field Validation Policies can be configured and live tested via the Admin Console.
+- [ ] Front Desk Month Calendar supports drag-and-drop booking rescheduling.
+- [ ] Persistent Dark Mode toggle correctly maintains theme state across browser sessions.

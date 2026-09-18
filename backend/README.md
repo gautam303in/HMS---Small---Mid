@@ -33,6 +33,25 @@ Domain-modular, production-ready backend API service for **The Grand Azure Hotel
 
 ---
 
+## 🛡️ Dynamic Field Validation Policies
+
+The backend exposes configuration endpoints allowing administrators to establish and enforce validation rules across the entire hotel management suite:
+
+- **`GET /api/hotel/field-validations`**: Retrieves current field validation configuration map (required flags, min/max lengths, regex patterns, custom error messages).
+- **`PUT /api/hotel/field-validations`**: Updates and persists field validation policies, logging an immutable audit record (`VALIDATION_RULES_UPDATED`) to the system ledger.
+
+Supported field identifiers include:
+
+- `guestPhone`: Indian 10-digit mobile number validation (`^[6-9]\d{9}$`).
+- `guestEmail`: RFC 5322 compliant email regex.
+- `guestGstin`: Indian 15-character Goods & Services Tax Identification Number (`^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$`).
+- `guestAadhaar`: 12-digit Indian National Unique ID (`^\d{12}$`).
+- `guestPan`: 10-character Permanent Account Number (`^[A-Z]{5}[0-9]{4}[A-Z]{1}$`).
+- `roomTariff`: Positive numeric currency validation (`^\d+(\.\d{1,2})?$`).
+- `inventoryThreshold`: Positive integer stock threshold validation (`^\d+$`).
+
+---
+
 ## 🚀 Running & Building Backend
 
 Run within the `backend/` directory:

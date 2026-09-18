@@ -1,8 +1,8 @@
 # The Grand Azure – Hotel Management System (HMS)
 
-> A production-ready, domain-modular Hotel Management System (HMS) built around **PostgreSQL 16/17+ as the authoritative system of record**, event-driven asynchronous integration, and managed cloud deployments (Ubuntu Server, AWS, and GCP). Covers the complete hospitality lifecycle from omnichannel reservations to digital KYC, append-only folio billing with dual-slab GST, restaurant POS with Kitchen Display (KDS), stock ledgers, duty rosters, dynamic pricing, and a full Master Data & Admin Management Center with Supabase integration.
+> A production-ready, domain-modular Hotel Management System (HMS) built around **PostgreSQL 16/17+ as the authoritative system of record**, event-driven asynchronous integration, and managed cloud deployments (Ubuntu Server, AWS, and GCP). Covers the complete hospitality lifecycle from omnichannel reservations to digital KYC, append-only folio billing with dual-slab GST, restaurant POS with Kitchen Display (KDS), stock ledgers, duty rosters, dynamic pricing, front desk month-view calendar with HTML5 drag-and-drop rescheduling, an Admin Field Validation Policy Engine, and a full Master Data & Admin Management Center with Supabase integration.
 
-Built with design inspiration from the modern **Lodgify** hospitality interface, featuring clean aesthetics, pastel visual hierarchy, and signature electric-lime accents. Native currency support in Indian Rupee (**₹ / INR**).
+Built with design inspiration from the modern **Lodgify** hospitality interface, featuring clean aesthetics, pastel visual hierarchy, and signature electric-lime accents. Native currency support in Indian Rupee (**₹ / INR**) and persistent Dark Mode theming.
 
 ---
 
@@ -43,15 +43,15 @@ Built with design inspiration from the modern **Lodgify** hospitality interface,
 
 | Domain Module | Schema | Purpose & Key Tables | Concurrency & Ledger Controls |
 | :--- | :--- | :--- | :--- |
-| **Master Data & Admin** | `hotel` / `pos` / `inventory` | `rooms`, `pricing_configs`, `menu_items`, `items`, `staff` | Full CRUD for rooms, tariffs, F&B menu catalog, inventory SKUs, workforce, and property profile with logo upload. |
+| **Master Data & Admin** | `hotel` / `pos` / `inventory` | `rooms`, `pricing_configs`, `menu_items`, `items`, `staff` | Full CRUD for rooms, tariffs, F&B menu catalog, inventory SKUs, workforce, property profile with logo upload, and **Dynamic Field Validation Policies**. |
 | **Identity & RBAC** | `identity` | `tenants`, `users` | Multi-tenant isolation with scoped roles (`Admin`, `Reception`, `Housekeeping`, `Kitchen`). |
 | **Hotel Catalog** | `hotel` | `properties`, `room_types`, `rooms`, `outlets` | Room operational state machine (`Available` → `Occupied` → `Dirty` → `Cleaning` → `Inspected`). |
-| **Guest CRM & KYC** | `guest` | `guests`, `feedback`, `loyalty_members` | Encrypted KYC document verification (`Passport`, `National ID`), NPS sentiment scoring. |
-| **Reservation Engine** | `reservation` | `reservations`, `room_inventory_daily`, `pricing_configs` | Daily matrix inventory allocation avoiding overselling; dynamic surge pricing engine. |
-| **Stay & Front Desk** | `stay` | `checkin_records`, `checkout_records` | Check-in KYC sync; automated room turnover dispatch to Housekeeping on checkout. |
-| **Folio & Billing** | `billing` | `folios`, `folio_entries`, `journal_entries`, `journal_lines` | **Append-only ledger** with reversals; dual-slab GST (`996311`/`996331`); payment settlement in ₹. |
+| **Guest CRM & KYC** | `guest` | `guests`, `feedback`, `loyalty_members` | Encrypted KYC document verification (`Passport`, `National ID`, `Aadhaar`), NPS sentiment scoring. |
+| **Reservation Engine** | `reservation` | `reservations`, `room_inventory_daily`, `pricing_configs` | Daily matrix inventory allocation; dynamic surge pricing engine; **interactive month calendar with HTML5 drag-and-drop rescheduling**. |
+| **Stay & Front Desk** | `stay` | `checkin_records`, `checkout_records` | Check-in KYC sync; **Today's Arrivals widget** with 1-click check-in; automated turnover dispatch to Housekeeping on checkout. |
+| **Folio & Billing** | `billing` | `folios`, `folio_entries`, `journal_entries`, `journal_lines` | **Append-only ledger** with reversals; dual-slab GST (`996311`/`996331`); payment settlement in ₹; **daily summary PDF export**. |
 | **POS & Kitchen** | `pos` | `pos_orders`, `pos_order_items`, `menu_items` | Touch ordering; live KDS ticket progression; automatic charge-to-room folio routing. |
-| **Inventory Ledger** | `inventory` | `items`, `stock_ledger`, `stock_balances` | **Append-only stock movements** (`PURCHASE`, `KITCHEN_ISSUE`, `WASTAGE`) + balance projections. |
+| **Inventory Ledger** | `inventory` | `items`, `stock_ledger`, `stock_balances` | **Append-only stock movements** (`PURCHASE`, `KITCHEN_ISSUE`, `WASTAGE`); **low-stock visual alert badges & threshold filters**. |
 | **Housekeeping** | `housekeeping` | `tasks`, `maintenance_work_orders` | Turnover tasks, inspection checklists, technician work order resolution workflows. |
 | **Workforce & HR** | `workforce` | `staff`, `attendance_records`, `leave_requests` | Shift rosters, biometric punch-in/out attendance simulator, supervisor leave approvals. |
 | **Audit & Security** | `audit` | `audit_log` | Immutable append-only audit trail logging actors, roles, actions, timestamps, and IPs. |
@@ -64,7 +64,7 @@ Built with design inspiration from the modern **Lodgify** hospitality interface,
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Frontend Web** | React 19, TypeScript, Vite 8, Lucide React, Modern Lodgify Design System |
+| **Frontend Web** | React 19, TypeScript, Vite 8, Lucide React, Recharts, jsPDF, Modern Lodgify Design System |
 | **Backend API** | Node.js v20+, TypeScript, Express Modular Architecture with REST Endpoints |
 | **System of Record** | PostgreSQL 16/17+ (Schemas, Append-Only Ledgers, RLS, Supabase Integration) |
 | **Currency** | Native Indian Rupee (**₹ / INR**) with formatted pricing across all folios and catalogs |
@@ -75,7 +75,7 @@ Built with design inspiration from the modern **Lodgify** hospitality interface,
 | **Reverse Proxy** | Nginx with Gzip Compression, Security Headers, and Let's Encrypt TLS |
 | **Containers** | Docker Compose with PostgreSQL 16, Redis 7, RabbitMQ 3 Management |
 | **Cloud Deployments** | **Ubuntu Server 22.04/24.04**, **AWS** (ECS + RDS + S3), and **GCP** (Cloud Run + Cloud SQL) |
-| **CI/CD & Tests** | GitHub Actions pipeline, 19 End-to-End Enterprise UAT Hospitality Use Cases (`npm test`) |
+| **CI/CD & Tests** | GitHub Actions pipeline, Oxlint static linting, 19 End-to-End Enterprise UAT Hospitality Use Cases (`npm test`) |
 
 ---
 
@@ -86,10 +86,12 @@ Accessible to users with the `Admin` role via the **Master Data & Admin** sideba
 1. **🏨 Rooms Matrix**: Create, update, filter, and delete rooms with floor, category, tariff in ₹, and amenities.
 2. **📈 Rates & Dynamic Surge**: Base tariffs by category, occupancy trigger thresholds, surge/weekend multipliers, and live rate simulator.
 3. **🍽️ F&B Menu Catalog**: Dish creation, pricing in ₹, category filtering, preparation times, and real-time synchronization with POS ordering.
-4. **📦 Inventory Catalog**: Stock tracking, minimum threshold alerts, unit costs in ₹, and supplier assignments.
-5. **👥 Staff & Workforce**: Employee directory, shifts, contact information, and duty status management.
+4. **📦 Inventory Catalog**: Stock tracking, minimum threshold alerts, unit costs in ₹, supplier assignments, and low-stock visual alert badges.
+5. **👥 Staff & Workforce**: Employee directory, shifts, departments, contact information, and duty status management.
 6. **🏢 Hotel Master Profile & Logo Upload**: Entity name, GSTIN, HSN/SAC codes, address, contact details, and **official brand logo upload** with instant live sidebar preview and persistent synchronization.
-7. **⚡ Supabase Database Link Hub**: Live database connection testing, credential management, 1-click cloud sync, and instant PostgreSQL schema migration scripts.
+7. **🛡️ Field Validation Policy Engine**: Dynamic validation configuration interface allowing administrators to enforce required fields, min/max lengths, custom regex patterns, and tailored error messages, paired with a **live interactive regex sandbox / test simulator**.
+8. **📋 Standardized Master Dropdown Datasets**: 36 Indian States & Union Territories with official GST state codes, standard inventory UOM units (`KGS`, `LTRS`, `PCS`, etc.), and staff department/role hierarchies.
+9. **⚡ Supabase Database Link Hub**: Live database connection testing, credential management, 1-click cloud sync, and instant PostgreSQL schema migration scripts.
 
 ---
 
