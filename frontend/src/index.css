@@ -185,12 +185,16 @@ body {
   border-radius: var(--radius-full);
 }
 
-/* Inputs */
+/* Inputs & Form Controls */
 .input-clean {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
   background: #FFFFFF;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-full);
-  padding: 10px 18px;
+  padding: 10px 16px;
   font-size: 13px;
   font-family: inherit;
   color: var(--text-main);
@@ -200,6 +204,27 @@ body {
 .input-clean:focus {
   border-color: #0F172A;
 }
+textarea.input-clean {
+  border-radius: var(--radius-md);
+  resize: vertical;
+}
+
+/* Form layout helpers */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 2px;
+}
+
 
 /* Modal Overlay */
 .modal-overlay {

@@ -1854,25 +1854,25 @@ export const AdminMasterView: React.FC = () => {
       {/* MODAL: ADD / EDIT ROOM */}
       {/* ========================================================================= */}
       {roomModal.open && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div className="lodgify-card" style={{ width: '480px', maxWidth: '90vw' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', marginBottom: '16px' }}>
-              {roomModal.mode === 'create' ? 'Create New Room' : `Edit Room ${roomModal.data.roomNumber}`}
-            </h3>
+        <div className="modal-overlay" onClick={() => setRoomModal({ ...roomModal, open: false })}>
+          <div className="modal-container" style={{ maxWidth: '520px', padding: '28px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+                {roomModal.mode === 'create' ? 'Create New Room' : `Edit Room ${roomModal.data.roomNumber}`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setRoomModal({ ...roomModal, open: false })}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#64748B', display: 'flex', borderRadius: '6px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
 
             <form onSubmit={handleSaveRoom} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Room Number</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Room Number</label>
                   <input
                     type="text"
                     required
@@ -1882,8 +1882,8 @@ export const AdminMasterView: React.FC = () => {
                     placeholder="e.g. 401"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Floor</label>
+                <div className="form-field">
+                  <label className="form-label">Floor</label>
                   <input
                     type="number"
                     min="1"
@@ -1896,9 +1896,9 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Category</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Category</label>
                   <select
                     value={roomModal.data.category || 'Standard'}
                     onChange={e => setRoomModal({ ...roomModal, data: { ...roomModal.data, category: e.target.value as any } })}
@@ -1910,8 +1910,8 @@ export const AdminMasterView: React.FC = () => {
                     <option value="Presidential Suite">Presidential Suite</option>
                   </select>
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Base Tariff (INR ₹)</label>
+                <div className="form-field">
+                  <label className="form-label">Base Tariff (INR ₹)</label>
                   <input
                     type="number"
                     min="500"
@@ -1924,9 +1924,9 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Max Guests</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Max Guests</label>
                   <input
                     type="number"
                     min="1"
@@ -1937,8 +1937,8 @@ export const AdminMasterView: React.FC = () => {
                     className="input-clean"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Initial Status</label>
+                <div className="form-field">
+                  <label className="form-label">Initial Status</label>
                   <select
                     value={roomModal.data.status || 'Available'}
                     onChange={e => setRoomModal({ ...roomModal, data: { ...roomModal.data, status: e.target.value as any } })}
@@ -1954,8 +1954,8 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Amenities (comma separated)</label>
+              <div className="form-field">
+                <label className="form-label">Amenities (comma separated)</label>
                 <input
                   type="text"
                   value={Array.isArray(roomModal.data.amenities) ? roomModal.data.amenities.join(', ') : (roomModal.data.amenities || '')}
@@ -1965,11 +1965,11 @@ export const AdminMasterView: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
                 <button
                   type="button"
                   onClick={() => setRoomModal({ open: false, mode: 'create', data: {} })}
-                  style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', cursor: 'pointer' }}
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
@@ -1986,24 +1986,24 @@ export const AdminMasterView: React.FC = () => {
       {/* MODAL: ADD / EDIT MENU ITEM */}
       {/* ========================================================================= */}
       {menuModal.open && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div className="lodgify-card" style={{ width: '480px', maxWidth: '90vw' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', marginBottom: '16px' }}>
-              {menuModal.mode === 'create' ? 'Add Menu Dish' : `Edit ${menuModal.data.name}`}
-            </h3>
+        <div className="modal-overlay" onClick={() => setMenuModal({ ...menuModal, open: false })}>
+          <div className="modal-container" style={{ maxWidth: '520px', padding: '28px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+                {menuModal.mode === 'create' ? 'Add Menu Dish' : `Edit ${menuModal.data.name}`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setMenuModal({ ...menuModal, open: false })}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#64748B', display: 'flex', borderRadius: '6px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
 
             <form onSubmit={handleSaveMenuItem} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Dish Name</label>
+              <div className="form-field">
+                <label className="form-label">Dish Name</label>
                 <input
                   type="text"
                   required
@@ -2014,9 +2014,9 @@ export const AdminMasterView: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Category</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Category</label>
                   <select
                     value={menuModal.data.category || 'Main Course'}
                     onChange={e => setMenuModal({ ...menuModal, data: { ...menuModal.data, category: e.target.value as any } })}
@@ -2029,8 +2029,8 @@ export const AdminMasterView: React.FC = () => {
                     <option value="Alcohol">Alcohol</option>
                   </select>
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Price (INR ₹)</label>
+                <div className="form-field">
+                  <label className="form-label">Price (INR ₹)</label>
                   <input
                     type="number"
                     min="0"
@@ -2043,9 +2043,9 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Prep Time</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Prep Time</label>
                   <input
                     type="text"
                     value={menuModal.data.prepTime || '15 min'}
@@ -2053,8 +2053,8 @@ export const AdminMasterView: React.FC = () => {
                     className="input-clean"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Availability</label>
+                <div className="form-field">
+                  <label className="form-label">Availability</label>
                   <select
                     value={menuModal.data.available !== false ? 'true' : 'false'}
                     onChange={e => setMenuModal({ ...menuModal, data: { ...menuModal.data, available: e.target.value === 'true' } })}
@@ -2066,8 +2066,8 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Description</label>
+              <div className="form-field">
+                <label className="form-label">Description</label>
                 <textarea
                   value={menuModal.data.description || ''}
                   onChange={e => setMenuModal({ ...menuModal, data: { ...menuModal.data, description: e.target.value } })}
@@ -2077,11 +2077,11 @@ export const AdminMasterView: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
                 <button
                   type="button"
                   onClick={() => setMenuModal({ open: false, mode: 'create', data: {} })}
-                  style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', cursor: 'pointer' }}
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
@@ -2098,24 +2098,24 @@ export const AdminMasterView: React.FC = () => {
       {/* MODAL: ADD / EDIT INVENTORY SKU */}
       {/* ========================================================================= */}
       {invModal.open && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div className="lodgify-card" style={{ width: '480px', maxWidth: '90vw' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', marginBottom: '16px' }}>
-              {invModal.mode === 'create' ? 'Add Inventory SKU' : `Edit ${invModal.data.name}`}
-            </h3>
+        <div className="modal-overlay" onClick={() => setInvModal({ ...invModal, open: false })}>
+          <div className="modal-container" style={{ maxWidth: '520px', padding: '28px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+                {invModal.mode === 'create' ? 'Add Inventory SKU' : `Edit ${invModal.data.name}`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setInvModal({ ...invModal, open: false })}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#64748B', display: 'flex', borderRadius: '6px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
 
             <form onSubmit={handleSaveInventory} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Item Name</label>
+              <div className="form-field">
+                <label className="form-label">Item Name</label>
                 <input
                   type="text"
                   required
@@ -2126,9 +2126,9 @@ export const AdminMasterView: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Category</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Category</label>
                   <select
                     value={invModal.data.category || 'Housekeeping Supplies'}
                     onChange={e => setInvModal({ ...invModal, data: { ...invModal.data, category: e.target.value } })}
@@ -2141,8 +2141,8 @@ export const AdminMasterView: React.FC = () => {
                     <option value="Housekeeping Supplies">Housekeeping Supplies</option>
                   </select>
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Unit</label>
+                <div className="form-field">
+                  <label className="form-label">Unit</label>
                   <input
                     type="text"
                     value={invModal.data.unit || 'pcs'}
@@ -2153,45 +2153,45 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Current Stock</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+                <div className="form-field">
+                  <label className="form-label">Current Stock</label>
                   <input
                     type="number"
                     min="0"
                     required
-                    value={invModal.data.currentStock || 0}
+                    value={invModal.data.currentStock ?? 0}
                     onChange={e => setInvModal({ ...invModal, data: { ...invModal.data, currentStock: Number(e.target.value) } })}
                     className="input-clean"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Min Alert</label>
+                <div className="form-field">
+                  <label className="form-label">Min Alert</label>
                   <input
                     type="number"
                     min="0"
                     required
-                    value={invModal.data.minThreshold || 10}
+                    value={invModal.data.minThreshold ?? 10}
                     onChange={e => setInvModal({ ...invModal, data: { ...invModal.data, minThreshold: Number(e.target.value) } })}
                     className="input-clean"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Unit Cost (₹)</label>
+                <div className="form-field">
+                  <label className="form-label">Unit Cost (₹)</label>
                   <input
                     type="number"
                     min="0"
                     step="1"
                     required
-                    value={invModal.data.unitCost || 0}
+                    value={invModal.data.unitCost ?? 0}
                     onChange={e => setInvModal({ ...invModal, data: { ...invModal.data, unitCost: Number(e.target.value) } })}
                     className="input-clean"
                   />
                 </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Supplier Vendor</label>
+              <div className="form-field">
+                <label className="form-label">Supplier Vendor</label>
                 <input
                   type="text"
                   value={invModal.data.supplier || ''}
@@ -2201,11 +2201,11 @@ export const AdminMasterView: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
                 <button
                   type="button"
                   onClick={() => setInvModal({ open: false, mode: 'create', data: {} })}
-                  style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', cursor: 'pointer' }}
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
@@ -2222,24 +2222,24 @@ export const AdminMasterView: React.FC = () => {
       {/* MODAL: ADD / EDIT STAFF MEMBER */}
       {/* ========================================================================= */}
       {staffModal.open && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div className="lodgify-card" style={{ width: '480px', maxWidth: '90vw' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', marginBottom: '16px' }}>
-              {staffModal.mode === 'create' ? 'Onboard Team Member' : `Edit ${staffModal.data.name}`}
-            </h3>
+        <div className="modal-overlay" onClick={() => setStaffModal({ ...staffModal, open: false })}>
+          <div className="modal-container" style={{ maxWidth: '520px', padding: '28px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
+                {staffModal.mode === 'create' ? 'Onboard Team Member' : `Edit ${staffModal.data.name}`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setStaffModal({ ...staffModal, open: false })}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#64748B', display: 'flex', borderRadius: '6px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
 
             <form onSubmit={handleSaveStaff} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Full Name</label>
+              <div className="form-field">
+                <label className="form-label">Full Name</label>
                 <input
                   type="text"
                   required
@@ -2250,9 +2250,9 @@ export const AdminMasterView: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Role</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Role</label>
                   <input
                     type="text"
                     required
@@ -2261,8 +2261,8 @@ export const AdminMasterView: React.FC = () => {
                     className="input-clean"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Department</label>
+                <div className="form-field">
+                  <label className="form-label">Department</label>
                   <select
                     value={staffModal.data.department || 'Front Office'}
                     onChange={e => setStaffModal({ ...staffModal, data: { ...staffModal.data, department: e.target.value } })}
@@ -2277,9 +2277,9 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Shift</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Shift</label>
                   <select
                     value={staffModal.data.shift || 'Morning (06:00-14:00)'}
                     onChange={e => setStaffModal({ ...staffModal, data: { ...staffModal.data, shift: e.target.value } })}
@@ -2290,8 +2290,8 @@ export const AdminMasterView: React.FC = () => {
                     <option value="Night (22:00-06:00)">Night (22:00-06:00)</option>
                   </select>
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Duty Status</label>
+                <div className="form-field">
+                  <label className="form-label">Duty Status</label>
                   <select
                     value={staffModal.data.status || 'On Duty'}
                     onChange={e => setStaffModal({ ...staffModal, data: { ...staffModal.data, status: e.target.value } })}
@@ -2304,9 +2304,9 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Phone</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                <div className="form-field">
+                  <label className="form-label">Phone</label>
                   <input
                     type="text"
                     value={staffModal.data.phone || ''}
@@ -2315,8 +2315,8 @@ export const AdminMasterView: React.FC = () => {
                     placeholder="+91 98450 00000"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155' }}>Email</label>
+                <div className="form-field">
+                  <label className="form-label">Email</label>
                   <input
                     type="email"
                     value={staffModal.data.email || ''}
@@ -2326,11 +2326,11 @@ export const AdminMasterView: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
                 <button
                   type="button"
                   onClick={() => setStaffModal({ open: false, mode: 'create', data: {} })}
-                  style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', cursor: 'pointer' }}
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
