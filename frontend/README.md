@@ -1,32 +1,80 @@
-# React + TypeScript + Vite
+# The Grand Azure – Hotel Management System (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Modern, high-performance web interface for **The Grand Azure Hotel Management System**, designed with the aesthetics of **Lodgify** featuring a pastel hierarchy, responsive sidebar, native Indian Rupee (`₹ / INR`) pricing, and real-time operational views.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Technology Stack
 
-## React Compiler
+- **Framework**: React 19 + TypeScript
+- **Bundler & Dev Server**: Vite 8
+- **Icons**: Lucide React
+- **Styling**: Modern Vanilla CSS Design Tokens (Lodgify Color Palette: Primary `#0E94A8`, Accent `#0F172A`, Background `#F8FAFC`)
+- **Linter**: Oxlint (High-performance Rust-based JavaScript/TypeScript linter)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 📱 Navigation & Operational Views
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+The frontend includes dedicated operational panels based on Role-Based Access Control (RBAC):
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+1. **Dashboard (`DashboardView`)**: Live KPIs (Occupancy Rate, RevPAR, ADR, Pending Tasks, Active Guests), room turnover state counters, real-time revenue curves, and platform distribution feeds.
+2. **Reservations (`ReservationView`)**: Omnichannel bookings list, direct check-in, digital KYC document upload and verification.
+3. **Rooms Management (`RoomsView`)**: Room status matrix (`Available`, `Occupied`, `Dirty`, `Cleaning`, `Inspected`), room maintenance blocks, and floor plans.
+4. **Housekeeping (`HousekeepingView`)**: Cleaning task queues, turnaround timers, maintenance work orders, and maid assignment.
+5. **Kitchen & POS (`ConciergeView`)**: Touch-friendly restaurant POS ordering, live Kitchen Display System (KDS) progression, and charge-to-room folio settlement.
+6. **Billing & Invoicing (`FinancialsView`)**: Append-only folio ledgers, dual-slab GST calculations (12% vs 18% accommodation, 5% F&B), and payment reconciliation.
+7. **Master Data & Admin (`AdminMasterView`)**:
+   - Rooms & Floor Matrix CRUD
+   - Dynamic Pricing & Demand Surge Calculator
+   - F&B Menu Items Catalog CRUD
+   - Inventory Stock & SKU Catalog CRUD
+   - Staff Roster & Employee Profiles CRUD
+   - Hotel Master Profile with **Brand Logo File Upload** & Live Sidebar Sync
+   - **Supabase Cloud Link Hub** with connection probing and 1-click cloud sync
+8. **Staff & HR (`StaffView`)**: Duty roster, biometric fingerprint punch-in simulator, and attendance records.
+9. **User Management (`UsersView`)**: User provisioning, role assignments (`Admin`, `Reception`, `Housekeeping`, `Kitchen`), and permission scoping.
+10. **Audit & Channels (`AuditView`)**: Immutable system audit logs and 2-way OTA channel synchronization (Booking.com, Airbnb, Expedia).
+
+---
+
+## 🚀 Development & Build Scripts
+
+Run within the `frontend/` directory (or use workspace commands from the root):
+
+### 1. Start Local Dev Server
+
+```bash
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Launches the Vite dev server at `http://localhost:3000/` with Hot Module Replacement (HMR).
+
+### 2. Lint Codebase
+
+```bash
+npm run lint
+```
+
+Runs `oxlint` with 0 warnings and 0 errors across all 19 component and view files.
+
+### 3. Build Production Bundle
+
+```bash
+npm run build
+```
+
+Executes TypeScript typecheck (`tsc -b`) and bundles static assets into `dist/` ready for Nginx deployment.
+
+---
+
+## ⚙️ Environment Variables
+
+Create `.env` or `.env.production`:
+
+```env
+# Base URL for Backend REST API
+VITE_API_BASE_URL=http://localhost:5000/api
+```
+
+When deployed behind Nginx reverse proxy, set `VITE_API_BASE_URL=/api`.
