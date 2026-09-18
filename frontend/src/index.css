@@ -304,3 +304,156 @@ body {
   background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
+/* ==========================================================================
+   Responsive Screen Auto-Adjustment Utilities & Media Queries
+   ========================================================================== */
+
+/* Responsive View Container - Auto adjusts per screen size */
+.responsive-view-container {
+  padding: clamp(14px, 2.5vw, 32px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: clamp(14px, 2vw, 24px) !important;
+  width: 100% !important;
+  max-width: 1600px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+/* Responsive Action Header - Auto stacks on smaller screens */
+.responsive-action-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Responsive Split Grid - 2 columns on desktop, 1 column on tablet/mobile */
+.responsive-split-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr;
+  gap: 24px;
+  width: 100%;
+}
+
+/* Responsive Auto Grid - adapts columns based on container width */
+.responsive-auto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+/* Responsive Metadata Grid - 4 items collapsing smoothly */
+.responsive-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  width: 100%;
+}
+
+/* Responsive Table Wrapper - Smooth horizontal scroll on smaller viewports */
+.responsive-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Responsive Subtabs - Horizontal scrollable without breaking */
+.responsive-subtabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  white-space: nowrap;
+}
+
+.responsive-subtabs button {
+  flex-shrink: 0;
+}
+
+/* Admin Top Banner */
+.admin-top-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Media Query Breakpoints */
+@media (max-width: 1200px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .responsive-split-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-sub-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-header {
+    padding: 0 16px !important;
+    height: auto !important;
+    min-height: 64px !important;
+  }
+
+  .app-header-search {
+    width: 200px !important;
+  }
+
+  .dashboard-container {
+    padding: 16px !important;
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-action-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .admin-top-banner {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header-search {
+    display: none !important;
+  }
+
+  .header-user-info {
+    display: none !important;
+  }
+
+  .dashboard-container {
+    padding: 12px !important;
+    gap: 16px !important;
+  }
+
+  .modal-container {
+    max-width: 96vw !important;
+    padding: 16px !important;
+  }
+}
+
+
+
+

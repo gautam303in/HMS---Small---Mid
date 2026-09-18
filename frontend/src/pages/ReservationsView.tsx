@@ -226,12 +226,12 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({ onNavigateTa
   });
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* Top action header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="responsive-action-header">
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+          <h2 style={{ fontSize: 'clamp(18px, 2vw, 20px)', fontWeight: '800', color: '#0F172A', margin: 0 }}>
             Guest Reservations & Front Desk
           </h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
@@ -246,8 +246,8 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({ onNavigateTa
       </div>
 
       {/* Filter and search bar */}
-      <div className="lodgify-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '320px' }}>
+      <div className="lodgify-card responsive-action-header" style={{ padding: '16px 20px' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '320px', maxWidth: '100%' }}>
           <Search size={16} color="#94A3B8" style={{ position: 'absolute', left: '16px' }} />
           <input
             type="text"
@@ -259,14 +259,13 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({ onNavigateTa
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', fontWeight: '600', color: '#64748B' }}>Status:</span>
+        <div className="responsive-subtabs" style={{ display: 'flex', gap: '8px' }}>
           {['All', 'Confirmed', 'CheckedIn', 'CheckedOut'].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
               style={{
-                padding: '6px 14px',
+                padding: '7px 14px',
                 borderRadius: '9999px',
                 fontSize: '12px',
                 fontWeight: '700',
@@ -284,7 +283,7 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({ onNavigateTa
       </div>
 
       {/* Reservations Table */}
-      <div className="lodgify-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="lodgify-card responsive-table-wrapper" style={{ padding: 0 }}>
         <table className="data-table">
           <thead>
             <tr>

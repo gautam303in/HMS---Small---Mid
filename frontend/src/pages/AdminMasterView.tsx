@@ -568,17 +568,14 @@ export const AdminMasterView: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* Top Banner: Admin Master Data Hub */}
-      <div className="lodgify-card" style={{
+      <div className="lodgify-card admin-top-banner" style={{
         background: 'linear-gradient(135deg, #0A5360 0%, #0E94A8 100%)',
         color: '#FFFFFF',
         padding: '24px 28px',
         marginBottom: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         borderRadius: '16px',
         boxShadow: '0 8px 24px rgba(14, 148, 168, 0.18)'
       }}>
@@ -591,13 +588,14 @@ export const AdminMasterView: React.FC = () => {
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            flexShrink: 0
           }}>
             <ShieldCheck size={26} color="#FFFFFF" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, letterSpacing: '-0.3px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <h2 style={{ fontSize: 'clamp(17px, 2vw, 20px)', fontWeight: '800', margin: 0, letterSpacing: '-0.3px' }}>
                 Master Data Administration & Database Hub
               </h2>
               <span style={{
@@ -625,7 +623,8 @@ export const AdminMasterView: React.FC = () => {
           backgroundColor: 'rgba(0, 0, 0, 0.2)',
           padding: '8px 16px',
           borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          flexShrink: 0
         }}>
           <div style={{
             width: '10px',
@@ -668,14 +667,10 @@ export const AdminMasterView: React.FC = () => {
       )}
 
       {/* Sub-Navigation Tabs */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
+      <div className="responsive-subtabs" style={{
         marginBottom: '20px',
         borderBottom: '1px solid #E2E8F0',
-        paddingBottom: '12px',
-        overflowX: 'auto'
+        paddingBottom: '12px'
       }}>
         {[
           { id: 'rooms', label: `Rooms Matrix (${rooms.length})`, icon: BedDouble },

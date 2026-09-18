@@ -52,12 +52,12 @@ export const InventoryView: React.FC = () => {
     : inventory.filter(i => i.category === selectedCategory);
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="responsive-action-header">
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+          <h2 style={{ fontSize: 'clamp(18px, 2vw, 20px)', fontWeight: '800', color: '#0F172A', margin: 0 }}>
             Inventory & Laundry Operations
           </h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
@@ -66,7 +66,7 @@ export const InventoryView: React.FC = () => {
         </div>
 
         {/* View mode toggle */}
-        <div style={{ display: 'flex', gap: '4px', backgroundColor: '#F1F5F9', padding: '4px', borderRadius: '9999px' }}>
+        <div style={{ display: 'flex', gap: '4px', backgroundColor: '#F1F5F9', padding: '4px', borderRadius: '9999px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('stock')}
             style={{
@@ -104,7 +104,7 @@ export const InventoryView: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Categories */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="responsive-subtabs" style={{ display: 'flex', gap: '8px' }}>
             {['All', 'Kitchen', 'Amenities', 'Linen', 'Minibar', 'Housekeeping'].map((cat) => (
               <button
                 key={cat}
@@ -129,7 +129,7 @@ export const InventoryView: React.FC = () => {
           </div>
 
           {/* Stock Table */}
-          <div className="lodgify-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="lodgify-card responsive-table-wrapper" style={{ padding: 0 }}>
             <table className="data-table">
               <thead>
                 <tr>
@@ -220,7 +220,7 @@ export const InventoryView: React.FC = () => {
         </div>
       ) : (
         /* Laundry Batch Cycles */
-        <div className="lodgify-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="lodgify-card responsive-table-wrapper" style={{ padding: 0 }}>
           <table className="data-table">
             <thead>
               <tr>

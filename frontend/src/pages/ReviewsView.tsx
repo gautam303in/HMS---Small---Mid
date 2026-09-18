@@ -81,12 +81,12 @@ export const ReviewsView: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="responsive-action-header">
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+          <h2 style={{ fontSize: 'clamp(18px, 2vw, 20px)', fontWeight: '800', color: '#0F172A', margin: 0 }}>
             Guest Reviews, NPS & Loyalty Rewards
           </h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
@@ -101,7 +101,7 @@ export const ReviewsView: React.FC = () => {
       </div>
 
       {/* Grid: Feedback list (Left) + Loyalty Program (Right) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '24px' }}>
+      <div className="responsive-split-grid">
         
         {/* LEFT: REVIEWS FEED */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

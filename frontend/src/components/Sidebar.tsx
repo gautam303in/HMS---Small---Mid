@@ -58,13 +58,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return localStorage.getItem('hms_sidebar_pinned') === 'true';
   });
 
+  const [isScreenSmall, setIsScreenSmall] = useState(() => {
+    return typeof window !== 'undefined' ? window.innerWidth < 1100 : false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsScreenSmall(window.innerWidth < 1100);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [customLogo, setCustomLogo] = useState<string | null>(() => {
     return localStorage.getItem('hms_hotel_logo');
   });
 
+  const effectivePinned = isPinned && !isScreenSmall;
+
   useEffect(() => {
-    onPinnedChange?.(isPinned);
-  }, [isPinned, onPinnedChange]);
+    onPinnedChange?.(effectivePinned);
+  }, [effectivePinned, onPinnedChange]);
 
   const togglePin = () => {
     const next = !isPinned;
@@ -122,25 +136,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
     ? allMenuItems.filter(item => allowedTabs.includes(item.id))
     : allMenuItems;
 
-  const isVisible = isPinned || isHovered;
+  const isVisible = effectivePinned || isHovered;
 
   return (
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        position: isPinned ? 'relative' : 'fixed',
+        position: effectivePinned ? 'relative' : 'fixed',
         left: 0,
         top: 0,
         bottom: 0,
-        width: isPinned ? '240px' : '0px',
-        minWidth: isPinned ? '240px' : '0px',
+        width: effectivePinned ? '240px' : '0px',
+        minWidth: effectivePinned ? '240px' : '0px',
         zIndex: 1000,
         display: 'flex'
       }}
     >
       {/* Floating Peek Handle (Shown only when unpinned and not hovering) */}
-      {!isPinned && !isHovered && (
+      {!effectivePinned && !isHovered && (
         <div
           title="Hover to open navigation menu"
           style={{
@@ -184,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         color: '#FFFFFF',
         transform: isVisible ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease',
-        boxShadow: (!isPinned && isVisible) ? '10px 0 35px rgba(0, 0, 0, 0.35)' : 'none',
+        boxShadow: (!effectivePinned && isVisible) ? '10px 0 35px rgba(0, 0, 0, 0.35)' : 'none',
         overflowY: 'auto'
       }}>
         {/* Brand Logo & Pin Header */}
@@ -308,7 +322,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                if (!effectivePinned) setIsHovered(false);
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',

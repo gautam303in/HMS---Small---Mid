@@ -64,12 +64,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _on
   };
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="animate-fade-in dashboard-container" style={{ padding: 'clamp(14px, 2.5vw, 32px)', display: 'flex', flexDirection: 'column', gap: '28px' }}>
       
       {/* 1. TOP METRIC CARDS ROW */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: '20px'
       }}>
         {/* Card 1: New Bookings */}
@@ -227,7 +227,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _on
       </div>
 
       {/* 2. MAIN GRID: 2 COLUMNS (LEFT 2/3, RIGHT 1/3) */}
-      <div style={{
+      <div className="dashboard-main-grid" style={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
         gap: '24px'
@@ -237,7 +237,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _on
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* ROW 1: Room Availability (Left) + Revenue Wave (Right) */}
-          <div style={{
+          <div className="dashboard-sub-grid" style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1.6fr',
             gap: '20px'
@@ -390,7 +390,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab: _on
           </div>
 
           {/* ROW 2: Reservations Bar Chart + Booking by Platform Donut */}
-          <div style={{
+          <div className="dashboard-sub-grid" style={{
             display: 'grid',
             gridTemplateColumns: '1.2fr 1fr',
             gap: '20px'

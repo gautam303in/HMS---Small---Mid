@@ -146,12 +146,12 @@ export const UsersView: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="responsive-action-header">
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+          <h2 style={{ fontSize: 'clamp(18px, 2vw, 20px)', fontWeight: '800', color: '#0F172A', margin: 0 }}>
             User Management & Role-Based Access Control (RBAC)
           </h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
@@ -185,7 +185,7 @@ export const UsersView: React.FC = () => {
       )}
 
       {/* Role Scoping Explanation Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+      <div className="responsive-auto-grid">
         {[
           { role: 'Admin', title: 'Administrator', access: 'All 12 Modules + User Creation', landing: 'Dashboard', bg: '#FEF9C3', border: '#FEF08A' },
           { role: 'Reception', title: 'Reception / Front Desk', access: 'Bookings, Rooms & Final Bill Invoicing', landing: 'Reservation', bg: '#E0F2FE', border: '#BAE6FD' },
@@ -207,7 +207,7 @@ export const UsersView: React.FC = () => {
       </div>
 
       {/* Users Table */}
-      <div className="lodgify-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="lodgify-card responsive-table-wrapper" style={{ padding: 0 }}>
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #E8EEF5', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Shield size={18} color="#0F172A" />
           <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0F172A', margin: 0 }}>

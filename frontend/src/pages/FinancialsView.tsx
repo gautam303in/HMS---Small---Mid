@@ -83,12 +83,12 @@ export const FinancialsView: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="responsive-action-header">
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+          <h2 style={{ fontSize: 'clamp(18px, 2vw, 20px)', fontWeight: '800', color: '#0F172A', margin: 0 }}>
             Billing, GST Compliance & Dynamic Pricing
           </h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
@@ -96,7 +96,7 @@ export const FinancialsView: React.FC = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button onClick={() => setInvoiceModal(true)} className="btn-secondary">
             <Printer size={15} /> Print Tax Invoice
           </button>
@@ -109,13 +109,13 @@ export const FinancialsView: React.FC = () => {
       </div>
 
       {/* Main Grid: Folio details + Dynamic Pricing Simulator */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '24px' }}>
+      <div className="responsive-split-grid">
         
         {/* LEFT: GUEST FOLIO & ITEMIZED BILL */}
         <div className="lodgify-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Folio selector tabs */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #E8EEF5', paddingBottom: '16px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #E8EEF5', paddingBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {folios.map((f, idx) => (
                 <button
                   key={f.id}
@@ -149,7 +149,7 @@ export const FinancialsView: React.FC = () => {
           </div>
 
           {/* Folio Metadata */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '14px' }}>
+          <div className="responsive-metadata-grid" style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '14px' }}>
             <div>
               <div style={{ fontSize: '11px', color: '#64748B' }}>Invoice No.</div>
               <div style={{ fontSize: '13px', fontWeight: '800', color: '#0F172A' }}>{currentFolio.invoiceNumber}</div>
@@ -169,44 +169,46 @@ export const FinancialsView: React.FC = () => {
           </div>
 
           {/* Itemized Line Items Table */}
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th>SAC / HSN</th>
-                <th>GST Rate</th>
-                <th style={{ textAlign: 'right' }}>Amount (₹)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentFolio.items.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div style={{ fontWeight: '700', color: '#0F172A' }}>{item.description}</div>
-                    <div style={{ fontSize: '11px', color: '#94A3B8' }}>{item.category} • {item.date}</div>
-                  </td>
-                  <td>
-                    <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#475569' }}>{item.hsnSacCode}</span>
-                  </td>
-                  <td>
-                    <span style={{
-                      backgroundColor: item.taxRate >= 18 ? '#FEF3C7' : '#D1FAE5',
-                      color: item.taxRate >= 18 ? '#92400E' : '#065F46',
-                      fontWeight: '700',
-                      fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '9999px'
-                    }}>
-                      {item.taxRate}%
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right', fontWeight: '800', color: '#0F172A' }}>
-                    ₹{item.amount.toLocaleString()}
-                  </td>
+          <div className="responsive-table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>SAC / HSN</th>
+                  <th>GST Rate</th>
+                  <th style={{ textAlign: 'right' }}>Amount (₹)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentFolio.items.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div style={{ fontWeight: '700', color: '#0F172A' }}>{item.description}</div>
+                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>{item.category} • {item.date}</div>
+                    </td>
+                    <td>
+                      <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#475569' }}>{item.hsnSacCode}</span>
+                    </td>
+                    <td>
+                      <span style={{
+                        backgroundColor: item.taxRate >= 18 ? '#FEF3C7' : '#D1FAE5',
+                        color: item.taxRate >= 18 ? '#92400E' : '#065F46',
+                        fontWeight: '700',
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: '9999px'
+                      }}>
+                        {item.taxRate}%
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right', fontWeight: '800', color: '#0F172A' }}>
+                      ₹{item.amount.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* Tax & Grand Total Summary */}
           <div style={{

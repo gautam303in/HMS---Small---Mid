@@ -167,15 +167,15 @@ export const HousekeepingView: React.FC = () => {
     : rows.filter(r => r.status === viewFilter);
 
   return (
-    <div className="animate-fade-in" style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* ---------------------------------------------------- */}
       {/* 1. TOP HEADER & VIEW TOGGLES */}
       {/* ---------------------------------------------------- */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="responsive-action-header">
         <div>
           <h1 style={{
-            fontSize: '24px',
+            fontSize: 'clamp(20px, 2.5vw, 24px)',
             fontWeight: '800',
             color: '#0F172A',
             letterSpacing: '-0.3px',

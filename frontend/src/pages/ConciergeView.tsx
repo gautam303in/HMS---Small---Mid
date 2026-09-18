@@ -108,11 +108,11 @@ export const ConciergeView: React.FC = () => {
     : menuItems.filter(m => m.category === selectedCategory);
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* Top Header */}
       <div>
-        <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+        <h2 style={{ fontSize: 'clamp(18px, 2vw, 20px)', fontWeight: '800', color: '#0F172A', margin: 0 }}>
           Restaurant POS & Kitchen Display System (KDS)
         </h2>
         <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
@@ -121,13 +121,13 @@ export const ConciergeView: React.FC = () => {
       </div>
 
       {/* Main Grid: POS Menu (Left) + Cart & KDS (Right) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '24px' }}>
+      <div className="responsive-split-grid">
         
         {/* LEFT: MENU ITEMS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
           {/* Category Tabs */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="responsive-subtabs" style={{ display: 'flex', gap: '8px' }}>
             {['All', 'Main Course', 'Appetizer', 'Beverage', 'Dessert'].map((cat) => (
               <button
                 key={cat}

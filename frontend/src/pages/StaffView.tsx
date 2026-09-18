@@ -43,12 +43,12 @@ export const StaffView: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="animate-fade-in responsive-view-container">
       
       {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="responsive-action-header">
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+          <h2 style={{ fontSize: 'clamp(18px, 2vw, 20px)', fontWeight: '800', color: '#0F172A', margin: 0 }}>
             Staff Management & Duty Rosters
           </h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
@@ -65,7 +65,7 @@ export const StaffView: React.FC = () => {
       </div>
 
       {/* Sub Tabs */}
-      <div style={{ display: 'flex', gap: '8px' }}>
+      <div className="responsive-subtabs" style={{ display: 'flex', gap: '8px' }}>
         {[
           { id: 'roster', label: 'Duty Roster & Shifts' },
           { id: 'attendance', label: 'Attendance Records' },
@@ -94,7 +94,7 @@ export const StaffView: React.FC = () => {
       </div>
 
       {activeSubTab === 'roster' && (
-        <div className="lodgify-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="lodgify-card responsive-table-wrapper" style={{ padding: 0 }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -150,7 +150,7 @@ export const StaffView: React.FC = () => {
       )}
 
       {activeSubTab === 'attendance' && (
-        <div className="lodgify-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="lodgify-card responsive-table-wrapper" style={{ padding: 0 }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -191,7 +191,7 @@ export const StaffView: React.FC = () => {
       )}
 
       {activeSubTab === 'leave' && (
-        <div className="lodgify-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="lodgify-card responsive-table-wrapper" style={{ padding: 0 }}>
           <table className="data-table">
             <thead>
               <tr>

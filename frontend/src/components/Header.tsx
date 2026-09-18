@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   const roleStyle = getRoleColor(userRole);
 
   return (
-    <header style={{
+    <header className="app-header" style={{
       height: '76px',
       padding: '0 32px',
       display: 'flex',
@@ -69,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
     }}>
       {/* Title */}
       <h1 style={{
-        fontSize: '22px',
+        fontSize: 'clamp(18px, 2vw, 22px)',
         fontWeight: '800',
         color: 'var(--text-main)',
         letterSpacing: '-0.3px',
@@ -79,13 +79,13 @@ export const Header: React.FC<HeaderProps> = ({
       </h1>
 
       {/* Right controls: Search + Actions + User Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {/* Search input pill */}
-        <div style={{
+        <div className="app-header-search" style={{
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          width: '280px'
+          width: '260px'
         }}>
           <Search size={16} color="#94A3B8" style={{ position: 'absolute', left: '16px' }} />
           <input
@@ -230,8 +230,8 @@ export const Header: React.FC<HeaderProps> = ({
           }}>
             {initials}
           </div>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: '800', color: '#0F172A', lineHeight: 1.2 }}>
+          <div className="header-user-info">
+            <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)', lineHeight: 1.2 }}>
               {userName}
             </div>
             <span style={{

@@ -107,7 +107,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', width: '100vw', minHeight: '100vh', backgroundColor: 'var(--bg-app)', transition: 'background-color 0.2s ease' }}>
+    <div style={{ display: 'flex', width: '100%', maxWidth: '100vw', minHeight: '100vh', backgroundColor: 'var(--bg-app)', overflowX: 'hidden', transition: 'background-color 0.2s ease' }}>
       {/* Left Sidebar (default hidden, visible on mouse hover, with pin support) */}
       <Sidebar 
         activeTab={activeTab} 
