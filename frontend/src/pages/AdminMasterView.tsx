@@ -204,7 +204,15 @@ export const AdminMasterView: React.FC = () => {
   };
 
   useEffect(() => {
-    loadMasterData();
+    let isMounted = true;
+    (async () => {
+      if (isMounted) {
+        await loadMasterData();
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
