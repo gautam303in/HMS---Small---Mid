@@ -7,7 +7,7 @@
 
 import { Router, Request, Response } from 'express';
 import { store } from '../../data/store.js';
-import { PosOrder } from '../../types/index.js';
+import { PosOrder, MenuItem } from '../../types/index.js';
 import { GstTaxCalculator } from '../../services/gstCalculator.js';
 import { outbox } from '../../events/outboxProcessor.js';
 
@@ -93,4 +93,64 @@ posRouter.patch('/pos/orders/:id/status', (req: Request, res: Response) => {
   }
 
   res.json(order);
+});
+
+// Master Data: F&B Menu Catalog
+posRouter.get('/pos/menu', (req: Request, res: Response) => {
+  res.json(store.menuItems);
+});
+
+posRouter.post('/pos/menu', (req: Request, res: Response) => {
+  const { name, category, price, prepTime, available, description } = req.body;
+  if (!name || price === undefined) {
+    return res.status(400).json({ error: 'Name and price are required for menu item' });
+  }
+
+  const newItem: MenuItem = {
+    id: `m-${Date.now()}`,
+    name: String(name),
+    category: category || 'Main Course',
+    price: Number(price),
+    prepTime: prepTime || '15 min',
+    available: available !== undefined ? Boolean(available) : true,
+    description: description || ''
+  };
+
+  store.menuItems.push(newItem);
+  store.logAudit('Admin', 'Executive Chef', 'MENU_ITEM_CREATED', `Added menu dish: ${newItem.name} (₹${newItem.price})`);
+  res.status(201).json(newItem);
+});
+
+posRouter.put('/pos/menu/:id', (req: Request, res: Response) => {
+  const itemIndex = store.menuItems.findIndex(m => m.id === req.params.id);
+  if (itemIndex === -1) {
+    return res.status(404).json({ error: 'Menu item not found' });
+  }
+
+  const current = store.menuItems[itemIndex];
+  const { name, category, price, prepTime, available, description } = req.body;
+
+  store.menuItems[itemIndex] = {
+    ...current,
+    name: name !== undefined ? String(name) : current.name,
+    category: category || current.category,
+    price: price !== undefined ? Number(price) : current.price,
+    prepTime: prepTime !== undefined ? String(prepTime) : current.prepTime,
+    available: available !== undefined ? Boolean(available) : current.available,
+    description: description !== undefined ? String(description) : current.description
+  };
+
+  store.logAudit('Admin', 'Executive Chef', 'MENU_ITEM_UPDATED', `Updated menu dish: ${store.menuItems[itemIndex].name} (₹${store.menuItems[itemIndex].price})`);
+  res.json(store.menuItems[itemIndex]);
+});
+
+posRouter.delete('/pos/menu/:id', (req: Request, res: Response) => {
+  const itemIndex = store.menuItems.findIndex(m => m.id === req.params.id);
+  if (itemIndex === -1) {
+    return res.status(404).json({ error: 'Menu item not found' });
+  }
+
+  const deleted = store.menuItems.splice(itemIndex, 1)[0];
+  store.logAudit('Admin', 'Executive Chef', 'MENU_ITEM_DELETED', `Deleted menu dish: ${deleted.name}`);
+  res.json({ message: `Menu item ${deleted.name} deleted successfully`, item: deleted });
 });

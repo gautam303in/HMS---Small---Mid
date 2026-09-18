@@ -7,12 +7,73 @@
 
 import { Router, Request, Response } from 'express';
 import { store } from '../../data/store.js';
+import { StaffMember } from '../../types/index.js';
 import { outbox } from '../../events/outboxProcessor.js';
 
 export const workforceRouter = Router();
 
 workforceRouter.get('/staff', (req: Request, res: Response) => {
   res.json(store.staffMembers);
+});
+
+// Master Data: Create Staff Member
+workforceRouter.post('/staff', (req: Request, res: Response) => {
+  const { name, role, department, shift, phone, email, status } = req.body;
+  if (!name || !role) {
+    return res.status(400).json({ error: 'Name and role are required' });
+  }
+
+  const newStaff: StaffMember = {
+    id: `stf-${Date.now()}`,
+    name: String(name),
+    role: role || 'Front Desk Officer',
+    department: department || 'Front Office',
+    shift: shift || 'Morning (06:00-14:00)',
+    phone: phone || '+91 98450 00000',
+    email: email || `${name.toLowerCase().replace(/\s+/g, '.')}@grandazure.com`,
+    status: status || 'On Duty'
+  };
+
+  store.staffMembers.push(newStaff);
+  store.logAudit('Admin', 'HR Administration', 'STAFF_MEMBER_CREATED', `Onboarded new staff member: ${newStaff.name} (${newStaff.role} - ${newStaff.department})`);
+  res.status(201).json(newStaff);
+});
+
+// Master Data: Update Staff Member
+workforceRouter.put('/staff/:id', (req: Request, res: Response) => {
+  const staffIndex = store.staffMembers.findIndex(s => s.id === req.params.id);
+  if (staffIndex === -1) {
+    return res.status(404).json({ error: 'Staff member not found' });
+  }
+
+  const current = store.staffMembers[staffIndex];
+  const { name, role, department, shift, phone, email, status } = req.body;
+
+  store.staffMembers[staffIndex] = {
+    ...current,
+    name: name !== undefined ? String(name) : current.name,
+    role: role || current.role,
+    department: department || current.department,
+    shift: shift || current.shift,
+    phone: phone !== undefined ? String(phone) : current.phone,
+    email: email !== undefined ? String(email) : current.email,
+    status: status || current.status
+  };
+
+  store.logAudit('Admin', 'HR Administration', 'STAFF_MEMBER_UPDATED', `Updated staff record for ${store.staffMembers[staffIndex].name}`);
+  res.json(store.staffMembers[staffIndex]);
+});
+
+// Master Data: Delete Staff Member
+workforceRouter.delete('/staff/:id', (req: Request, res: Response) => {
+  const staffIndex = store.staffMembers.findIndex(s => s.id === req.params.id);
+  if (staffIndex === -1) {
+    return res.status(404).json({ error: 'Staff member not found' });
+  }
+
+  const deleted = store.staffMembers.splice(staffIndex, 1)[0];
+  store.logAudit('Admin', 'HR Administration', 'STAFF_MEMBER_DELETED', `Offboarded staff member: ${deleted.name}`);
+  res.json({ message: `Staff member ${deleted.name} removed successfully`, staff: deleted });
 });
 
 workforceRouter.get('/staff/attendance', (req: Request, res: Response) => {

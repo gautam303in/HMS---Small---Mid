@@ -13,6 +13,7 @@ import {
   Users, 
   ShieldCheck,
   UserCog,
+  SlidersHorizontal,
   LogOut
 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export type TabType =
   | 'concierge' 
   | 'staff' 
   | 'users'
+  | 'admin'
   | 'audit';
 
 interface SidebarProps {
@@ -58,6 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'reviews' as TabType, label: 'Reviews', icon: Star },
     { id: 'concierge' as TabType, label: userRole === 'Kitchen' ? 'Kitchen Display & POS' : 'Concierge & POS', icon: UtensilsCrossed },
     { id: 'staff' as TabType, label: 'Staff & HR', icon: Users },
+    { id: 'admin' as TabType, label: 'Master Data & Admin', icon: SlidersHorizontal },
     { id: 'users' as TabType, label: 'Users & RBAC', icon: UserCog },
     { id: 'audit' as TabType, label: 'Audit & Sync', icon: ShieldCheck },
   ];

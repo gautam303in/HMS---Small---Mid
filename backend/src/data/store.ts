@@ -21,7 +21,9 @@ import {
   initialLoyaltyMembers,
   initialChannelSyncLogs,
   initialAuditLogs,
-  initialMaintenanceWorkOrders
+  initialMaintenanceWorkOrders,
+  initialMenuItems,
+  initialHotelProperty
 } from './mockData.js';
 import {
   Reservation,
@@ -40,7 +42,9 @@ import {
   LoyaltyProfile,
   ChannelSyncLog,
   AuditTrail,
-  DynamicPricingConfig
+  DynamicPricingConfig,
+  MenuItem,
+  HotelProperty
 } from '../types/index.js';
 
 export interface SystemUser {
@@ -79,7 +83,7 @@ export function getRolePermissions(role: string): { allowedTabs: string[]; landi
     case 'Admin':
     default:
       return {
-        allowedTabs: ['dashboard', 'reservation', 'rooms', 'messages', 'housekeeping', 'inventory', 'calendar', 'financials', 'reviews', 'concierge', 'staff', 'audit'],
+        allowedTabs: ['dashboard', 'reservation', 'rooms', 'messages', 'housekeeping', 'inventory', 'calendar', 'financials', 'reviews', 'concierge', 'staff', 'users', 'admin', 'audit'],
         landingTab: 'dashboard',
         department: 'Administration'
       };
@@ -94,7 +98,7 @@ export const initialSystemUsers: SystemUser[] = [
     password: 'admin123',
     role: 'Admin',
     department: 'Administration',
-    allowedTabs: ['dashboard', 'reservation', 'rooms', 'messages', 'housekeeping', 'inventory', 'calendar', 'financials', 'reviews', 'concierge', 'staff', 'audit'],
+    allowedTabs: ['dashboard', 'reservation', 'rooms', 'messages', 'housekeeping', 'inventory', 'calendar', 'financials', 'reviews', 'concierge', 'staff', 'users', 'admin', 'audit'],
     landingTab: 'dashboard',
     createdAt: '2026-09-01'
   },
@@ -153,6 +157,8 @@ class DomainDataStore {
   public channelSyncLogs: ChannelSyncLog[] = [];
   public pricingConfig: DynamicPricingConfig = { ...initialPricingConfig };
   public systemUsers: SystemUser[] = [];
+  public menuItems: MenuItem[] = [];
+  public hotelProperty: HotelProperty = { ...initialHotelProperty };
 
   private constructor() {
     this.reseed();
@@ -183,6 +189,8 @@ class DomainDataStore {
     this.channelSyncLogs = JSON.parse(JSON.stringify(initialChannelSyncLogs));
     this.pricingConfig = { ...initialPricingConfig };
     this.systemUsers = JSON.parse(JSON.stringify(initialSystemUsers));
+    this.menuItems = JSON.parse(JSON.stringify(initialMenuItems));
+    this.hotelProperty = JSON.parse(JSON.stringify(initialHotelProperty));
 
     this.logAudit('System Administrator', 'Admin', 'DATABASE_RESEEDED', 'Sample data successfully reseeded for UAT enterprise validation.');
   }

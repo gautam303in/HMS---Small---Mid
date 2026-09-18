@@ -7,7 +7,7 @@
 
 import { Router, Request, Response } from 'express';
 import { store } from '../../data/store.js';
-import { RoomStatus } from '../../types/index.js';
+import { Room, RoomStatus, RoomCategory, HotelProperty } from '../../types/index.js';
 import { outbox } from '../../events/outboxProcessor.js';
 
 export const hotelRouter = Router();
@@ -49,6 +49,93 @@ hotelRouter.patch('/rooms/:id/status', (req: Request, res: Response) => {
   store.logAudit('Staff', 'Operations', 'ROOM_STATUS_CHANGED', `Room ${store.rooms[roomIndex].roomNumber} transitioned from ${oldStatus} to ${status}`);
 
   res.json(store.rooms[roomIndex]);
+});
+
+// Master Data: Create Room
+hotelRouter.post('/rooms', (req: Request, res: Response) => {
+  const { roomNumber, floor, category, baseRate, maxGuests, amenities, status } = req.body;
+  
+  if (!roomNumber) {
+    return res.status(400).json({ error: 'Room number is required' });
+  }
+
+  const existing = store.rooms.find(r => r.roomNumber.toLowerCase() === String(roomNumber).toLowerCase());
+  if (existing) {
+    return res.status(409).json({ error: `Room number ${roomNumber} already exists` });
+  }
+
+  const newRoom: Room = {
+    id: `rm-${roomNumber.toString().toLowerCase().replace(/\s+/g, '-')}`,
+    roomNumber: String(roomNumber),
+    floor: Number(floor) || 1,
+    category: (category as RoomCategory) || 'Standard',
+    baseRate: Number(baseRate) || 2500,
+    maxGuests: Number(maxGuests) || 2,
+    status: (status as RoomStatus) || 'Available',
+    amenities: Array.isArray(amenities) ? amenities : ['Wi-Fi', 'Smart TV']
+  };
+
+  store.rooms.push(newRoom);
+  store.logAudit('Admin', 'Administrator', 'ROOM_CREATED', `Created new room ${newRoom.roomNumber} (${newRoom.category}) at ₹${newRoom.baseRate}/nt`);
+  res.status(201).json(newRoom);
+});
+
+// Master Data: Update Room
+hotelRouter.put('/rooms/:id', (req: Request, res: Response) => {
+  const roomIndex = store.rooms.findIndex(r => r.id === req.params.id || r.roomNumber === req.params.id);
+  if (roomIndex === -1) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+
+  const current = store.rooms[roomIndex];
+  const { roomNumber, floor, category, baseRate, maxGuests, amenities, status } = req.body;
+
+  if (roomNumber && roomNumber !== current.roomNumber) {
+    const conflict = store.rooms.find(r => r.id !== current.id && r.roomNumber.toLowerCase() === String(roomNumber).toLowerCase());
+    if (conflict) {
+      return res.status(409).json({ error: `Room number ${roomNumber} already taken` });
+    }
+  }
+
+  store.rooms[roomIndex] = {
+    ...current,
+    roomNumber: roomNumber ? String(roomNumber) : current.roomNumber,
+    floor: floor !== undefined ? Number(floor) : current.floor,
+    category: category || current.category,
+    baseRate: baseRate !== undefined ? Number(baseRate) : current.baseRate,
+    maxGuests: maxGuests !== undefined ? Number(maxGuests) : current.maxGuests,
+    amenities: Array.isArray(amenities) ? amenities : current.amenities,
+    status: status || current.status
+  };
+
+  store.logAudit('Admin', 'Administrator', 'ROOM_UPDATED', `Updated room ${store.rooms[roomIndex].roomNumber} configuration`);
+  res.json(store.rooms[roomIndex]);
+});
+
+// Master Data: Delete Room
+hotelRouter.delete('/rooms/:id', (req: Request, res: Response) => {
+  const roomIndex = store.rooms.findIndex(r => r.id === req.params.id || r.roomNumber === req.params.id);
+  if (roomIndex === -1) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+
+  const deleted = store.rooms.splice(roomIndex, 1)[0];
+  store.logAudit('Admin', 'Administrator', 'ROOM_DELETED', `Deleted room ${deleted.roomNumber} from catalog`);
+  res.json({ message: `Room ${deleted.roomNumber} deleted successfully`, room: deleted });
+});
+
+// Hotel Property Master Settings
+hotelRouter.get('/hotel/properties', (req: Request, res: Response) => {
+  res.json(store.hotelProperty);
+});
+
+hotelRouter.put('/hotel/properties', (req: Request, res: Response) => {
+  store.hotelProperty = {
+    ...store.hotelProperty,
+    ...req.body
+  };
+  store.logAudit('Admin', 'Administrator', 'PROPERTY_SETTINGS_UPDATED', `Updated master property settings for ${store.hotelProperty.name}`);
+  res.json(store.hotelProperty);
 });
 
 hotelRouter.get('/dashboard', (req: Request, res: Response) => {

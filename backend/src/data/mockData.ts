@@ -14,7 +14,9 @@ import {
   ChannelSyncLog,
   AuditTrail,
   DynamicPricingConfig,
-  MaintenanceWorkOrder
+  MaintenanceWorkOrder,
+  MenuItem,
+  HotelProperty
 } from '../types/index.js';
 
 export const initialRooms: Room[] = [
@@ -365,3 +367,30 @@ export const initialAuditLogs: AuditTrail[] = [
   { id: 'aud-3', timestamp: '2026-09-16 11:45', actor: 'Anita Desai', role: 'Housekeeping Lead', action: 'ROOM_INSPECTED', details: 'Room 202 inspection approved and marked ready for occupancy.', ipAddress: '192.168.1.115' },
   { id: 'aud-4', timestamp: '2026-09-16 13:20', actor: 'Antonio Rossi', role: 'Executive Chef', action: 'POS_ORDER_BILLED_TO_ROOM', details: 'Order POS-2026-041 amount ₹1,669.50 billed to Room 101 Folio.', ipAddress: '192.168.1.130' }
 ];
+
+export const initialMenuItems: MenuItem[] = [
+  { id: 'm1', name: 'Truffle Mushroom Risotto', category: 'Main Course', price: 850, prepTime: '20 min', available: true, description: 'Arborio rice infused with black truffle paste, parmesan, and wild porcini.' },
+  { id: 'm2', name: 'Wood-fired Margherita Pizza', category: 'Main Course', price: 650, prepTime: '15 min', available: true, description: 'San Marzano tomatoes, buffalo mozzarella, fresh basil, and extra virgin olive oil.' },
+  { id: 'm3', name: 'Grilled Norwegian Salmon', category: 'Main Course', price: 1200, prepTime: '25 min', available: true, description: 'Pan-seared Atlantic salmon fillet with dill lemon emulsion and asparagus.' },
+  { id: 'm4', name: 'Crispy Calamari Fritti', category: 'Appetizer', price: 480, prepTime: '12 min', available: true, description: 'Tender squid rings with garlic herb aioli and lemon wedges.' },
+  { id: 'm5', name: 'Burrata Caprese Salad', category: 'Appetizer', price: 520, prepTime: '10 min', available: true, description: 'Creamy burrata, heirloom tomatoes, aged balsamic reduction, basil pesto.' },
+  { id: 'm6', name: 'San Pellegrino 750ml', category: 'Beverage', price: 320, prepTime: '3 min', available: true, description: 'Sparkling natural mineral water imported from Italy.' },
+  { id: 'm7', name: 'Craft Berry Mocktail', category: 'Beverage', price: 280, prepTime: '5 min', available: true, description: 'Crushed blueberries, mint, lime, pomegranate fizz.' },
+  { id: 'm8', name: 'Tiramisu Della Nonna', category: 'Dessert', price: 420, prepTime: '5 min', available: true, description: 'Classic Italian espresso savoiardi with mascarpone and cocoa dusting.' },
+  { id: 'm9', name: 'Artisan Gelato Trio', category: 'Dessert', price: 350, prepTime: '5 min', available: true, description: 'Pistachio, Madagascar vanilla bean, and Belgian dark chocolate scoops.' }
+];
+
+export const initialHotelProperty: HotelProperty = {
+  id: 'b0000000-0000-0000-0000-000000000001',
+  tenantId: 'a0000000-0000-0000-0000-000000000001',
+  code: 'GA-GOA',
+  name: 'The Grand Azure Hotel & Suites',
+  currencyCode: 'INR',
+  currencySymbol: '₹',
+  timezone: 'Asia/Kolkata',
+  gstin: '27AAAAA0000A1Z5',
+  hsnSacCode: '996311',
+  address: 'Grand Azure Boulevard, Candolim Beach Road, North Goa 403515, India',
+  contactEmail: 'gm@grandazure.com',
+  contactPhone: '+91 832 249 9000'
+};

@@ -7,7 +7,7 @@
 
 import { Router, Request, Response } from 'express';
 import { store } from '../../data/store.js';
-import { LaundryBatch } from '../../types/index.js';
+import { LaundryBatch, InventoryItem } from '../../types/index.js';
 import { outbox } from '../../events/outboxProcessor.js';
 
 export const inventoryRouter = Router();
@@ -32,6 +32,67 @@ inventoryRouter.patch('/inventory/:id/stock', (req: Request, res: Response) => {
   });
 
   res.json(item);
+});
+
+// Master Data: Create Inventory Item
+inventoryRouter.post('/inventory', (req: Request, res: Response) => {
+  const { name, category, currentStock, minThreshold, unit, unitCost, supplier } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'Item name is required' });
+  }
+
+  const newItem: InventoryItem = {
+    id: `inv-${Date.now()}`,
+    name: String(name),
+    category: category || 'Housekeeping Supplies',
+    currentStock: Number(currentStock) || 0,
+    minThreshold: Number(minThreshold) || 10,
+    unit: unit || 'pcs',
+    unitCost: Number(unitCost) || 0,
+    supplier: supplier || 'General Vendor',
+    lastRestocked: new Date().toISOString().slice(0, 10)
+  };
+
+  store.inventoryItems.push(newItem);
+  store.logAudit('Admin', 'Operations', 'INVENTORY_ITEM_CREATED', `Added new inventory SKU: ${newItem.name} (Unit cost: ₹${newItem.unitCost})`);
+  res.status(201).json(newItem);
+});
+
+// Master Data: Update Inventory Item
+inventoryRouter.put('/inventory/:id', (req: Request, res: Response) => {
+  const itemIndex = store.inventoryItems.findIndex(i => i.id === req.params.id);
+  if (itemIndex === -1) {
+    return res.status(404).json({ error: 'Inventory item not found' });
+  }
+
+  const current = store.inventoryItems[itemIndex];
+  const { name, category, currentStock, minThreshold, unit, unitCost, supplier } = req.body;
+
+  store.inventoryItems[itemIndex] = {
+    ...current,
+    name: name !== undefined ? String(name) : current.name,
+    category: category || current.category,
+    currentStock: currentStock !== undefined ? Number(currentStock) : current.currentStock,
+    minThreshold: minThreshold !== undefined ? Number(minThreshold) : current.minThreshold,
+    unit: unit !== undefined ? String(unit) : current.unit,
+    unitCost: unitCost !== undefined ? Number(unitCost) : current.unitCost,
+    supplier: supplier !== undefined ? String(supplier) : current.supplier
+  };
+
+  store.logAudit('Admin', 'Operations', 'INVENTORY_ITEM_UPDATED', `Updated inventory SKU: ${store.inventoryItems[itemIndex].name}`);
+  res.json(store.inventoryItems[itemIndex]);
+});
+
+// Master Data: Delete Inventory Item
+inventoryRouter.delete('/inventory/:id', (req: Request, res: Response) => {
+  const itemIndex = store.inventoryItems.findIndex(i => i.id === req.params.id);
+  if (itemIndex === -1) {
+    return res.status(404).json({ error: 'Inventory item not found' });
+  }
+
+  const deleted = store.inventoryItems.splice(itemIndex, 1)[0];
+  store.logAudit('Admin', 'Operations', 'INVENTORY_ITEM_DELETED', `Deleted inventory SKU: ${deleted.name}`);
+  res.json({ message: `Inventory item ${deleted.name} deleted successfully`, item: deleted });
 });
 
 inventoryRouter.get('/laundry', (req: Request, res: Response) => {

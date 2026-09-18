@@ -259,3 +259,29 @@ export interface AuditTrail {
 export type LoyaltyMember = LoyaltyProfile;
 export type AuditLog = AuditTrail;
 
+export interface MenuItem {
+  id: string;
+  name: string;
+  category: 'Appetizer' | 'Main Course' | 'Beverage' | 'Dessert' | 'Alcohol';
+  price: number;
+  prepTime: string;
+  available: boolean;
+  description?: string;
+  taxRatePercent?: number;
+}
+
+export interface HotelProperty {
+  id: string;
+  tenantId: string;
+  code: string;
+  name: string;
+  currencyCode: string;
+  currencySymbol: string;
+  timezone: string;
+  gstin: string;
+  hsnSacCode: string;
+  address?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+

@@ -12,6 +12,7 @@ interface HeaderProps {
     department?: string;
   };
   onLogout?: () => void;
+  onNavigateTab?: (tab: any) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -19,7 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSyncOta, 
   isSyncing,
   currentUser,
-  onLogout
+  onLogout,
+  onNavigateTab
 }) => {
   const userName = currentUser?.name || 'Jaylon Dorwart';
   const userRole = currentUser?.role || 'Admin';
@@ -112,17 +114,21 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Settings Button */}
         {userRole === 'Admin' && (
-          <button style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            color: '#64748B',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
+          <button 
+            onClick={() => onNavigateTab?.('admin')}
+            title="Master Data & Admin Settings"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '8px',
+              color: '#64748B',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
             <Settings size={18} />
           </button>
         )}
@@ -155,13 +161,18 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* User Profile Badge */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          paddingLeft: '12px',
-          borderLeft: '1px solid #E8EEF5'
-        }}>
+        <div 
+          onClick={() => userRole === 'Admin' && onNavigateTab?.('admin')}
+          title={userRole === 'Admin' ? 'Open Master Data & Admin Profile' : undefined}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            paddingLeft: '12px',
+            borderLeft: '1px solid #E8EEF5',
+            cursor: userRole === 'Admin' ? 'pointer' : 'default'
+          }}
+        >
           <div style={{
             width: '38px',
             height: '38px',

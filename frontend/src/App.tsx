@@ -13,6 +13,7 @@ import { ReviewsView } from './pages/ReviewsView';
 import { AuditView } from './pages/AuditView';
 import { LoginView } from './pages/LoginView';
 import { UsersView } from './pages/UsersView';
+import { AdminMasterView } from './pages/AdminMasterView';
 
 interface AuthUser {
   id: string;
@@ -28,7 +29,14 @@ export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     try {
       const saved = localStorage.getItem('hms_auth_user');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u.role === 'Admin' && !u.allowedTabs.includes('admin')) {
+          u.allowedTabs.push('admin');
+        }
+        return u;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -50,6 +58,9 @@ export const App: React.FC = () => {
   const [isSyncingOta, setIsSyncingOta] = useState(false);
 
   const handleLoginSuccess = (user: AuthUser) => {
+    if (user.role === 'Admin' && !user.allowedTabs.includes('admin')) {
+      user.allowedTabs.push('admin');
+    }
     setCurrentUser(user);
     localStorage.setItem('hms_auth_user', JSON.stringify(user));
     const target = (user.landingTab as TabType) || 'dashboard';
@@ -84,6 +95,7 @@ export const App: React.FC = () => {
       case 'concierge': return currentUser?.role === 'Kitchen' ? 'Kitchen Display & POS' : 'Concierge & POS';
       case 'staff': return 'Staff & HR';
       case 'users': return 'User Access & RBAC Administration';
+      case 'admin': return 'Master Data & Admin Center';
       case 'audit': return 'Audit Logs & OTA Sync';
       default: return 'Hotel Management System';
     }
@@ -113,6 +125,7 @@ export const App: React.FC = () => {
           isSyncing={isSyncingOta} 
           currentUser={currentUser}
           onLogout={handleLogout}
+          onNavigateTab={setActiveTab}
         />
 
         <main style={{ flex: 1 }}>
@@ -128,6 +141,7 @@ export const App: React.FC = () => {
           {activeTab === 'reviews' && <ReviewsView />}
           {activeTab === 'audit' && <AuditView />}
           {activeTab === 'users' && currentUser.role === 'Admin' && <UsersView />}
+          {activeTab === 'admin' && currentUser.role === 'Admin' && <AdminMasterView />}
           {activeTab === 'messages' && (
             <div className="animate-fade-in" style={{ padding: '32px' }}>
               <div className="lodgify-card" style={{ maxWidth: '640px' }}>

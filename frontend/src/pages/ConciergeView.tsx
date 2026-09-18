@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, ChefHat, ShoppingBag } from 'lucide-react';
 
 export const ConciergeView: React.FC = () => {
@@ -8,8 +8,8 @@ export const ConciergeView: React.FC = () => {
   const [cart, setCart] = useState<Array<{ id: string; name: string; price: number; qty: number }>>([]);
   const [billToRoom, setBillToRoom] = useState(true);
 
-  // Menu items
-  const menuItems = [
+  // Dynamic menu items loaded from Master Data
+  const [menuItems, setMenuItems] = useState([
     { id: 'm1', name: 'Truffle Mushroom Risotto', category: 'Main Course', price: 850, prepTime: '20 min' },
     { id: 'm2', name: 'Wood-fired Margherita Pizza', category: 'Main Course', price: 650, prepTime: '15 min' },
     { id: 'm3', name: 'Grilled Norwegian Salmon', category: 'Main Course', price: 1200, prepTime: '25 min' },
@@ -19,7 +19,20 @@ export const ConciergeView: React.FC = () => {
     { id: 'm7', name: 'Craft Berry Mocktail', category: 'Beverage', price: 280, prepTime: '5 min' },
     { id: 'm8', name: 'Tiramisu Della Nonna', category: 'Dessert', price: 420, prepTime: '5 min' },
     { id: 'm9', name: 'Artisan Gelato Trio', category: 'Dessert', price: 350, prepTime: '5 min' },
-  ];
+  ]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch('http://localhost:5000/api/pos/menu')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (mounted && Array.isArray(data) && data.length > 0) {
+          setMenuItems(data);
+        }
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, []);
 
   // KDS Orders state
   const [kdsOrders, setKdsOrders] = useState([

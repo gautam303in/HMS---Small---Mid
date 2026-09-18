@@ -28,6 +28,7 @@ import { workforceRouter } from './modules/workforce/workforce.router.js';
 import { feedbackRouter } from './modules/feedback/feedback.router.js';
 import { integrationRouter } from './modules/integration/integration.router.js';
 import { auditRouter } from './modules/audit/audit.router.js';
+import { supabaseRouter } from './modules/integration/supabase.router.js';
 
 const frontendDist = typeof __dirname !== 'undefined'
   ? path.resolve(__dirname, '../../frontend/dist')
@@ -98,6 +99,8 @@ app.get('/api', (req: Request, res: Response) => {
       auth: '/api/auth/login',
       ota: '/api/ota/logs',
       audit: '/api/audit',
+      supabase: '/api/integrations/supabase/status',
+      menu: '/api/pos/menu',
       seed: '/api/seed'
     }
   });
@@ -214,6 +217,7 @@ app.use('/api', workforceRouter);
 app.use('/api', feedbackRouter);
 app.use('/api', integrationRouter);
 app.use('/api', auditRouter);
+app.use('/api', supabaseRouter);
 
 // SPA Client Routing fallback (non-API routes)
 app.get('*', (req: Request, res: Response, next: NextFunction) => {
