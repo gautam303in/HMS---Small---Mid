@@ -20,7 +20,7 @@ Domain-modular, production-ready backend API service for **The Grand Azure Hotel
 
 | Module Router | Endpoint Prefix | Operational Responsibilities |
 | :--- | :--- | :--- |
-| **Hotel Router** | `/api/rooms`, `/api/hotel` | Room matrix, state machine (`Available` → `Occupied` → `Dirty` → `Cleaning`), hotel property master, logo URL. |
+| **Hotel Router** | `/api/rooms`, `/api/hotel` | Room matrix, state machine (`Available` → `Occupied` → `Dirty` → `Cleaning`), hotel property master, logo URL, and **dynamic field validation policies** (`/api/hotel/field-validations`). |
 | **Reservation Router** | `/api/reservations` | Booking creation, check-in, guest folios, and daily room inventory allocation. |
 | **Pricing Engine** | `/api/pricing` | Dynamic surge pricing calculation with weekend and occupancy multipliers. |
 | **Billing Router** | `/api/billing` | Append-only folios, dual-slab GST calculation (`996311`/`996331`), invoice generation, payment settlement. |
