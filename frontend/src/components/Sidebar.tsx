@@ -48,6 +48,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
   userRole,
   onLogout
 }) => {
+  const [customLogo, setCustomLogo] = React.useState<string | null>(() => {
+    return localStorage.getItem('hms_hotel_logo');
+  });
+
+  React.useEffect(() => {
+    const updateLogo = () => {
+      setCustomLogo(localStorage.getItem('hms_hotel_logo'));
+    };
+
+    window.addEventListener('hms_logo_updated', updateLogo);
+    window.addEventListener('storage', updateLogo);
+
+    const cached = localStorage.getItem('hms_hotel_logo');
+    if (!cached) {
+      fetch('http://localhost:5000/api/hotel/properties')
+        .then(res => res.json())
+        .then(data => {
+          if (data.property?.logoUrl) {
+            setCustomLogo(data.property.logoUrl);
+            localStorage.setItem('hms_hotel_logo', data.property.logoUrl);
+          }
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      window.removeEventListener('hms_logo_updated', updateLogo);
+      window.removeEventListener('storage', updateLogo);
+    };
+  }, []);
+
   const allMenuItems = [
     { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'reservation' as TabType, label: 'Reservation', icon: CalendarCheck },
@@ -86,30 +117,59 @@ export const Sidebar: React.FC<SidebarProps> = ({
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        paddingLeft: '10px',
+        paddingLeft: '6px',
         marginBottom: '22px'
       }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 4px)',
-          gap: '2px',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          {[...Array(9)].map((_, i) => (
-            <div key={i} style={{
-              width: '4px',
-              height: '4px',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '1px'
-            }} />
-          ))}
-        </div>
+        {customLogo ? (
+          <div style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '8px',
+            backgroundColor: '#FFFFFF',
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+            flexShrink: 0
+          }}>
+            <img
+              src={customLogo}
+              alt="Hotel Logo"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 4px)',
+            gap: '2px',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            {[...Array(9)].map((_, i) => (
+              <div key={i} style={{
+                width: '4px',
+                height: '4px',
+                backgroundColor: '#FFFFFF',
+                borderRadius: '1px'
+              }} />
+            ))}
+          </div>
+        )}
         <span style={{
-          fontSize: '19px',
+          fontSize: '18px',
           fontWeight: '800',
           color: '#FFFFFF',
-          letterSpacing: '-0.3px'
+          letterSpacing: '-0.3px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
         }}>
           Lodgify
         </span>
@@ -120,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           fontWeight: '700',
           padding: '2px 7px',
           borderRadius: '9999px',
-          marginLeft: '4px'
+          marginLeft: 'auto'
         }}>
           v1.0
         </span>
