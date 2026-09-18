@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   CalendarCheck, 
@@ -14,7 +14,10 @@ import {
   ShieldCheck,
   UserCog,
   SlidersHorizontal,
-  LogOut
+  LogOut,
+  Menu,
+  Pin,
+  PinOff
 } from 'lucide-react';
 
 export type TabType = 
@@ -39,6 +42,7 @@ interface SidebarProps {
   allowedTabs?: string[];
   userRole?: string;
   onLogout?: () => void;
+  onPinnedChange?: (pinned: boolean) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -46,13 +50,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab, 
   allowedTabs,
   userRole,
-  onLogout
+  onLogout,
+  onPinnedChange
 }) => {
-  const [customLogo, setCustomLogo] = React.useState<string | null>(() => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPinned, setIsPinned] = useState(() => {
+    return localStorage.getItem('hms_sidebar_pinned') === 'true';
+  });
+
+  const [customLogo, setCustomLogo] = useState<string | null>(() => {
     return localStorage.getItem('hms_hotel_logo');
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
+    onPinnedChange?.(isPinned);
+  }, [isPinned, onPinnedChange]);
+
+  const togglePin = () => {
+    const next = !isPinned;
+    setIsPinned(next);
+    localStorage.setItem('hms_sidebar_pinned', String(next));
+    onPinnedChange?.(next);
+  };
+
+  useEffect(() => {
     const updateLogo = () => {
       setCustomLogo(localStorage.getItem('hms_hotel_logo'));
     };
@@ -101,90 +122,162 @@ export const Sidebar: React.FC<SidebarProps> = ({
     ? allMenuItems.filter(item => allowedTabs.includes(item.id))
     : allMenuItems;
 
+  const isVisible = isPinned || isHovered;
+
   return (
-    <aside style={{
-      width: '230px',
-      minWidth: '230px',
-      backgroundColor: '#0E94A8',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '20px 12px',
-      minHeight: '100vh',
-      color: '#FFFFFF'
-    }}>
-      {/* Brand Logo */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        paddingLeft: '6px',
-        marginBottom: '22px'
-      }}>
-        {customLogo ? (
-          <div style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '8px',
-            backgroundColor: '#FFFFFF',
-            padding: '2px',
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        position: isPinned ? 'relative' : 'fixed',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        zIndex: 1000,
+        display: 'flex'
+      }}
+    >
+      {/* Floating Peek Handle (Shown only when unpinned and not hovering) */}
+      {!isPinned && !isHovered && (
+        <div
+          title="Hover to open navigation menu"
+          style={{
+            position: 'fixed',
+            left: 0,
+            top: '16px',
+            width: '38px',
+            height: '44px',
+            backgroundColor: '#0E94A8',
+            borderRadius: '0 12px 12px 0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            color: '#FFFFFF',
+            cursor: 'pointer',
+            boxShadow: '2px 3px 12px rgba(14, 148, 168, 0.4)',
+            zIndex: 999,
+            transition: 'transform 0.15s ease, background-color 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.08)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+        >
+          <Menu size={20} />
+        </div>
+      )}
+
+      {/* Main Collapsible / Hoverable Sidebar Aside */}
+      <aside style={{
+        width: '240px',
+        minWidth: '240px',
+        backgroundColor: '#0E94A8',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '20px 12px',
+        minHeight: '100vh',
+        height: '100vh',
+        color: '#FFFFFF',
+        transform: isVisible ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease',
+        boxShadow: (!isPinned && isVisible) ? '10px 0 35px rgba(0, 0, 0, 0.35)' : 'none',
+        overflowY: 'auto'
+      }}>
+        {/* Brand Logo & Pin Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          paddingLeft: '4px',
+          marginBottom: '20px'
+        }}>
+          {customLogo ? (
+            <div style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '8px',
+              backgroundColor: '#FFFFFF',
+              padding: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+              flexShrink: 0
+            }}>
+              <img
+                src={customLogo}
+                alt="Hotel Logo"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain'
+                }}
+              />
+            </div>
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 4px)',
+              gap: '2px',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {[...Array(9)].map((_, i) => (
+                <div key={i} style={{
+                  width: '4px',
+                  height: '4px',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '1px'
+                }} />
+              ))}
+            </div>
+          )}
+          <span style={{
+            fontSize: '18px',
+            fontWeight: '800',
+            color: '#FFFFFF',
+            letterSpacing: '-0.3px',
+            whiteSpace: 'nowrap',
             overflow: 'hidden',
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
-            flexShrink: 0
+            textOverflow: 'ellipsis'
           }}>
-            <img
-              src={customLogo}
-              alt="Hotel Logo"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain'
-              }}
-            />
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 4px)',
-            gap: '2px',
-            alignItems: 'center',
-            justifyContent: 'center'
+            Lodgify
+          </span>
+          <span style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            color: '#FFFFFF',
+            fontSize: '10px',
+            fontWeight: '700',
+            padding: '2px 6px',
+            borderRadius: '9999px',
+            marginLeft: 'auto'
           }}>
-            {[...Array(9)].map((_, i) => (
-              <div key={i} style={{
-                width: '4px',
-                height: '4px',
-                backgroundColor: '#FFFFFF',
-                borderRadius: '1px'
-              }} />
-            ))}
-          </div>
-        )}
-        <span style={{
-          fontSize: '18px',
-          fontWeight: '800',
-          color: '#FFFFFF',
-          letterSpacing: '-0.3px',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
-        }}>
-          Lodgify
-        </span>
-        <span style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          color: '#FFFFFF',
-          fontSize: '10px',
-          fontWeight: '700',
-          padding: '2px 7px',
-          borderRadius: '9999px',
-          marginLeft: 'auto'
-        }}>
-          v1.0
-        </span>
-      </div>
+            v1.0
+          </span>
+
+          {/* Pin / Unpin Button */}
+          <button
+            onClick={togglePin}
+            title={isPinned ? 'Unpin sidebar (Auto-hide on hover)' : 'Pin sidebar open'}
+            style={{
+              background: isPinned ? 'rgba(255, 255, 255, 0.25)' : 'transparent',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '4px',
+              cursor: 'pointer',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background-color 0.15s ease'
+            }}
+          >
+            {isPinned ? <PinOff size={15} /> : <Pin size={15} />}
+          </button>
+        </div>
 
       {/* Role Pill Banner */}
       {userRole && (
@@ -308,5 +401,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
     </aside>
+    </div>
   );
 };

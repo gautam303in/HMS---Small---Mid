@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, Bell, Settings, RefreshCw, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Bell, Settings, RefreshCw, LogOut, Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   title: string;
@@ -27,6 +27,20 @@ export const Header: React.FC<HeaderProps> = ({
   const userRole = currentUser?.role || 'Admin';
   const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('hms_theme') as 'light' | 'dark') || 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('hms_theme', theme);
+    window.dispatchEvent(new CustomEvent('hms_theme_changed', { detail: theme }));
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'Admin': return { bg: '#FEF08A', color: '#854D0E' };
@@ -46,17 +60,18 @@ export const Header: React.FC<HeaderProps> = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: '#FFFFFF',
-      borderBottom: '1px solid #E8EEF5',
+      backgroundColor: 'var(--bg-card)',
+      borderBottom: '1px solid var(--border-subtle)',
       position: 'sticky',
       top: 0,
-      zIndex: 50
+      zIndex: 50,
+      transition: 'background-color 0.2s ease, border-color 0.2s ease'
     }}>
       {/* Title */}
       <h1 style={{
         fontSize: '22px',
         fontWeight: '800',
-        color: '#0F172A',
+        color: 'var(--text-main)',
         letterSpacing: '-0.3px',
         margin: 0
       }}>
@@ -101,9 +116,9 @@ export const Header: React.FC<HeaderProps> = ({
               fontWeight: '700',
               padding: '8px 14px',
               borderRadius: '9999px',
-              border: '1px solid #E2E8F0',
-              backgroundColor: '#FFFFFF',
-              color: '#0F172A',
+              border: '1px solid var(--border-subtle)',
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--text-main)',
               cursor: isSyncing ? 'not-allowed' : 'pointer'
             }}
           >
@@ -111,6 +126,32 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{isSyncing ? 'Syncing...' : 'Sync Channels'}</span>
           </button>
         )}
+
+        {/* Theme Toggle Button (Dark / Light Scheme) */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'light' ? 'Switch to Dark Scheme' : 'Switch to Light Scheme'}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '8px',
+            color: theme === 'dark' ? '#FBBF24' : '#64748B',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 0.15s ease, transform 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.12)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+        >
+          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+        </button>
 
         {/* Settings Button */}
         {userRole === 'Admin' && (

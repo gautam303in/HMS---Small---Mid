@@ -56,7 +56,7 @@ Built with design inspiration from the modern **Lodgify** hospitality interface,
 | **Workforce & HR** | `workforce` | `staff`, `attendance_records`, `leave_requests` | Shift rosters, biometric punch-in/out attendance simulator, supervisor leave approvals. |
 | **Audit & Security** | `audit` | `audit_log` | Immutable append-only audit trail logging actors, roles, actions, timestamps, and IPs. |
 | **Integration & OTAs** | `integration` | `outbox_events`, `ota_channel_sync_logs` | **Transactional Outbox pattern**; 2-way rate parity broadcast (Booking.com, Expedia, Airbnb). |
-| **Database Cloud Hub**| `integration` | Supabase Cloud Connector | Live connection health probe, schema migration generator, and 1-click cloud synchronization. |
+| **Database Cloud Hub** | `integration` | Supabase Cloud Connector | Live connection health probe, schema migration generator, and 1-click cloud synchronization. |
 
 ---
 
@@ -74,7 +74,7 @@ Built with design inspiration from the modern **Lodgify** hospitality interface,
 | **Process Manager** | PM2 Cluster Mode with Zero-Downtime Reloads |
 | **Reverse Proxy** | Nginx with Gzip Compression, Security Headers, and Let's Encrypt TLS |
 | **Containers** | Docker Compose with PostgreSQL 16, Redis 7, RabbitMQ 3 Management |
-| **Cloud Deployments**| **Ubuntu Server 22.04/24.04**, **AWS** (ECS + RDS + S3), and **GCP** (Cloud Run + Cloud SQL) |
+| **Cloud Deployments** | **Ubuntu Server 22.04/24.04**, **AWS** (ECS + RDS + S3), and **GCP** (Cloud Run + Cloud SQL) |
 | **CI/CD & Tests** | GitHub Actions pipeline, 19 End-to-End Enterprise UAT Hospitality Use Cases (`npm test`) |
 
 ---

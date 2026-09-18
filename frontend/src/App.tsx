@@ -81,6 +81,10 @@ export const App: React.FC = () => {
     }, 1200);
   };
 
+  const [sidebarPinned, setSidebarPinned] = useState<boolean>(() => {
+    return localStorage.getItem('hms_sidebar_pinned') === 'true';
+  });
+
   const getPageTitle = (tab: TabType): string => {
     switch (tab) {
       case 'dashboard': return 'Dashboard';
@@ -90,7 +94,7 @@ export const App: React.FC = () => {
       case 'housekeeping': return 'Housekeeping & Maintenance';
       case 'inventory': return currentUser?.role === 'Kitchen' ? 'Kitchen Inventory' : 'Inventory & Operations';
       case 'calendar': return 'Front Desk';
-      case 'financials': return 'Financials & Invoicing';
+      case 'financials': return 'Billing & Invoicing';
       case 'reviews': return 'Guest Reviews & Loyalty';
       case 'concierge': return currentUser?.role === 'Kitchen' ? 'Kitchen Display & POS' : 'Concierge & POS';
       case 'staff': return 'Staff & HR';
@@ -107,18 +111,27 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', width: '100vw', minHeight: '100vh', backgroundColor: '#F5F7FA' }}>
-      {/* Left Sidebar filtered by role permissions */}
+    <div style={{ display: 'flex', width: '100vw', minHeight: '100vh', backgroundColor: 'var(--bg-app)', transition: 'background-color 0.2s ease' }}>
+      {/* Left Sidebar (default hidden, visible on mouse hover, with pin support) */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         allowedTabs={currentUser.allowedTabs}
         userRole={currentUser.role}
         onLogout={handleLogout}
+        onPinnedChange={setSidebarPinned}
       />
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+        overflowX: 'hidden',
+        marginLeft: sidebarPinned ? '240px' : '0px',
+        transition: 'margin-left 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
+      }}>
         <Header 
           title={getPageTitle(activeTab)} 
           onSyncOta={handleSyncOta} 
