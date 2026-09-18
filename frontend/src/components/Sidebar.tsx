@@ -133,6 +133,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         left: 0,
         top: 0,
         bottom: 0,
+        width: isPinned ? '240px' : '0px',
+        minWidth: isPinned ? '240px' : '0px',
         zIndex: 1000,
         display: 'flex'
       }}

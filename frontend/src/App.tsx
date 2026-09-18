@@ -81,10 +81,6 @@ export const App: React.FC = () => {
     }, 1200);
   };
 
-  const [sidebarPinned, setSidebarPinned] = useState<boolean>(() => {
-    return localStorage.getItem('hms_sidebar_pinned') === 'true';
-  });
-
   const getPageTitle = (tab: TabType): string => {
     switch (tab) {
       case 'dashboard': return 'Dashboard';
@@ -119,7 +115,6 @@ export const App: React.FC = () => {
         allowedTabs={currentUser.allowedTabs}
         userRole={currentUser.role}
         onLogout={handleLogout}
-        onPinnedChange={setSidebarPinned}
       />
 
       {/* Main Content Area */}
@@ -128,9 +123,7 @@ export const App: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
-        overflowX: 'hidden',
-        marginLeft: sidebarPinned ? '240px' : '0px',
-        transition: 'margin-left 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
+        overflowX: 'hidden'
       }}>
         <Header 
           title={getPageTitle(activeTab)} 
